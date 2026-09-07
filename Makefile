@@ -1,4 +1,4 @@
-.PHONY: help install update run lint format check clean build up down restart logs ps shell db-shell
+.PHONY: help install update run lint format check test test-cov clean build up down restart logs ps shell db-shell
 
 POETRY := poetry -C backend
 RUN := $(POETRY) run
@@ -18,6 +18,8 @@ help:
 	@echo   make lint      Analisa o codigo com Ruff
 	@echo   make format    Formata o codigo com Ruff
 	@echo   make check     Formata e valida o codigo
+	@echo   make test      Roda os testes com pytest
+	@echo   make test-cov  Roda os testes com relatorio de cobertura
 	@echo   make clean     Remove caches e arquivos temporarios
 	@echo.
 	@echo   Ambiente containerizado
@@ -47,6 +49,12 @@ format:
 	$(RUN) ruff format backend
 
 check: format lint
+
+test:
+	$(RUN) pytest backend/tests
+
+test-cov:
+	$(RUN) pytest backend/tests --cov=backend --cov-report=term-missing
 
 clean:
 	-$(RUN) python -c "import pathlib, shutil; [shutil.rmtree(p, ignore_errors=True) for p in pathlib.Path('.').rglob('__pycache__')]"
