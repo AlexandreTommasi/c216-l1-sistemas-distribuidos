@@ -20,3 +20,9 @@ Thumbs.db
 
 # Arquivo auxiliar de PR
 pr-body.md
+
+# Cobertura de testes
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
