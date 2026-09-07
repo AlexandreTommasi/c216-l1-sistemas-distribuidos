@@ -51,10 +51,10 @@ format:
 check: format lint
 
 test:
-	$(RUN) pytest backend/tests
+	$(RUN) pytest tests
 
 test-cov:
-	$(RUN) pytest backend/tests --cov=backend --cov-report=term-missing
+	$(RUN) pytest tests --cov=backend --cov-report=term-missing
 
 clean:
 	-$(RUN) python -c "import pathlib, shutil; [shutil.rmtree(p, ignore_errors=True) for p in pathlib.Path('.').rglob('__pycache__')]"
