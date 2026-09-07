@@ -43,10 +43,10 @@ run:
 	cd backend && poetry run uvicorn $(APP) --host $(HOST) --port $(PORT) --reload
 
 lint:
-	$(RUN) ruff check backend
+	$(RUN) ruff check .
 
 format:
-	$(RUN) ruff format backend
+	$(RUN) ruff format .
 
 check: format lint
 
