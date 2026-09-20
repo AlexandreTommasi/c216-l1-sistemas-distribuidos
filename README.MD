@@ -50,6 +50,22 @@ make install
 make run
 ```
 
+## Testes
+
+Com as dependências instaladas (`make install`), rode os testes localmente:
+
+```bash
+make test
+```
+
+Para rodar com relatório de cobertura:
+
+```bash
+make test-cov
+```
+
+O CI (`.github/workflows/ci-backend.yml`) executa os testes automaticamente em todo `push` e `pull request`.
+
 ## Comandos disponíveis
 
 Execute `make help` na raiz para a lista completa.
