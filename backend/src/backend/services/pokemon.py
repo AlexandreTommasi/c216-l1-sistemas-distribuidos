@@ -1,5 +1,7 @@
 from typing import TypedDict
 
+from backend.schemas.pokemon import PokemonBase, PokemonCreate, PokemonUpdate
+
 
 class Pokemon(TypedDict):
     numero: int
@@ -42,3 +44,35 @@ def listar_por_tipo(tipo: str) -> list[Pokemon]:
 def eh_do_tipo(pokemon: Pokemon, tipo: str) -> bool:
     tipo_normalizado = normalizar_nome(tipo)
     return tipo_normalizado in pokemon["tipos"]
+
+
+def criar(data: PokemonCreate) -> Pokemon:
+    if data.numero in POKEDEX:
+        raise ValueError("numero ja existe")
+    entry: Pokemon = {"numero": data.numero, "nome": data.nome, "tipos": data.tipos}
+    POKEDEX[data.numero] = entry
+    return entry
+
+
+def substituir(numero: int, data: PokemonBase) -> Pokemon | None:
+    if numero not in POKEDEX:
+        return None
+    POKEDEX[numero] = {"numero": numero, "nome": data.nome, "tipos": data.tipos}
+    return POKEDEX[numero]
+
+
+def atualizar(numero: int, data: PokemonUpdate) -> Pokemon | None:
+    if numero not in POKEDEX:
+        return None
+    if data.nome is not None:
+        POKEDEX[numero]["nome"] = data.nome
+    if data.tipos is not None:
+        POKEDEX[numero]["tipos"] = data.tipos
+    return POKEDEX[numero]
+
+
+def remover(numero: int) -> bool:
+    if numero not in POKEDEX:
+        return False
+    del POKEDEX[numero]
+    return True
