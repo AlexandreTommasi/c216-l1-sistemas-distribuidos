@@ -26,3 +26,10 @@ dev = [
     "httpx (>=0.28.1,<0.29.0)",
     "pytest-cov (>=7.1.0,<8.0.0)"
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "unit: testes unitarios das funcoes de servico (sem HTTP)",
+    "integration: testes de integracao dos endpoints via TestClient",
+]
