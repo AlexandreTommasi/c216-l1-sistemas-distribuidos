@@ -1,17 +1,17 @@
 import pytest
 
+from backend.schemas.pokemon import PokemonBase, PokemonCreate, PokemonUpdate
 from backend.services.pokemon import (
+    atualizar,
     buscar_por_nome,
     buscar_por_numero,
     criar,
     eh_do_tipo,
     listar_por_tipo,
     normalizar_nome,
-    substituir,
-    atualizar,
     remover,
+    substituir,
 )
-from backend.schemas.pokemon import PokemonBase, PokemonCreate, PokemonUpdate
 
 pytestmark = pytest.mark.unit
 

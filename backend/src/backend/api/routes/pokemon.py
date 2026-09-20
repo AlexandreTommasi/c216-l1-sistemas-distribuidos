@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Body, HTTPException, Path
 
 from backend.schemas.pokemon import (
@@ -19,7 +21,7 @@ def list_pokemon(tipo: str | None = None):
 
 
 @router.get("/{numero}", response_model=PokemonResponse)
-def get_pokemon(numero: int = Path(gt=0)):
+def get_pokemon(numero: Annotated[int, Path(gt=0)]):
     pokemon = pokemon_service.POKEDEX.get(numero)
     if pokemon is None:
         raise HTTPException(status_code=404, detail="pokemon nao encontrado")
@@ -35,7 +37,10 @@ def create_pokemon(data: PokemonCreate):
 
 
 @router.put("/{numero}", response_model=PokemonResponse)
-def replace_pokemon(numero: int = Path(gt=0), data: PokemonBase = Body()):
+def replace_pokemon(
+    numero: Annotated[int, Path(gt=0)],
+    data: Annotated[PokemonBase, Body()],
+):
     result = pokemon_service.substituir(numero, data)
     if result is None:
         raise HTTPException(status_code=404, detail="pokemon nao encontrado")
@@ -43,7 +48,10 @@ def replace_pokemon(numero: int = Path(gt=0), data: PokemonBase = Body()):
 
 
 @router.patch("/{numero}", response_model=PokemonResponse)
-def update_pokemon(numero: int = Path(gt=0), data: PokemonUpdate = Body()):
+def update_pokemon(
+    numero: Annotated[int, Path(gt=0)],
+    data: Annotated[PokemonUpdate, Body()],
+):
     result = pokemon_service.atualizar(numero, data)
     if result is None:
         raise HTTPException(status_code=404, detail="pokemon nao encontrado")
@@ -51,7 +59,7 @@ def update_pokemon(numero: int = Path(gt=0), data: PokemonUpdate = Body()):
 
 
 @router.delete("/{numero}", status_code=204)
-def delete_pokemon(numero: int = Path(gt=0)):
+def delete_pokemon(numero: Annotated[int, Path(gt=0)]):
     removed = pokemon_service.remover(numero)
     if not removed:
         raise HTTPException(status_code=404, detail="pokemon nao encontrado")
