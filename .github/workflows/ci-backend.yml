@@ -38,5 +38,8 @@ jobs:
       - name: Instala as dependencias
         run: poetry install
 
-      - name: Roda o pytest
-        run: poetry run pytest tests
+      - name: Testes unitarios
+        run: poetry run pytest tests -m unit -v
+
+      - name: Testes de integracao
+        run: poetry run pytest tests -m integration -v
