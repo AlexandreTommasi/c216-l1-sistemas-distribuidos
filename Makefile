@@ -1,4 +1,4 @@
-.PHONY: help install update run lint format check test test-unit test-int test-cov clean build up down restart logs ps shell db-shell
+.PHONY: help install update run lint format check test test-unit test-int test-cov clean build up down restart logs ps shell db-shell db-upgrade db-downgrade db-migration db-current db-history
 
 POETRY := poetry -C backend
 RUN := $(POETRY) run
@@ -33,6 +33,13 @@ help:
 	@echo   make ps        Lista o estado dos servicos
 	@echo   make shell     Abre um shell no container do backend
 	@echo   make db-shell  Abre o psql no container do banco
+	@echo.
+	@echo   Migrations (Alembic)
+	@echo   make db-upgrade               Aplica as migrations pendentes
+	@echo   make db-downgrade             Desfaz a ultima migration
+	@echo   make db-migration msg="..."   Gera uma migration a partir dos modelos
+	@echo   make db-current               Mostra a revisao aplicada no banco
+	@echo   make db-history               Lista o historico de migrations
 	@echo.
 
 install:
@@ -91,3 +98,18 @@ shell:
 
 db-shell:
 	$(COMPOSE) exec db psql -U c216 -d c216
+
+db-upgrade:
+	$(RUN) alembic upgrade head
+
+db-downgrade:
+	$(RUN) alembic downgrade -1
+
+db-migration:
+	$(RUN) alembic revision --autogenerate -m "$(msg)"
+
+db-current:
+	$(RUN) alembic current
+
+db-history:
+	$(RUN) alembic history --verbose
