@@ -1,78 +1,63 @@
-from typing import TypedDict
+from sqlalchemy.orm import Session
 
+from backend.models.pokemon import Pokemon
+from backend.repositories import pokemon as repository
 from backend.schemas.pokemon import PokemonBase, PokemonCreate, PokemonUpdate
-
-
-class Pokemon(TypedDict):
-    numero: int
-    nome: str
-    tipos: list[str]
-
-
-POKEDEX: dict[int, Pokemon] = {
-    1: {"numero": 1, "nome": "Bulbasaur", "tipos": ["Grama", "Veneno"]},
-    4: {"numero": 4, "nome": "Charmander", "tipos": ["Fogo"]},
-    7: {"numero": 7, "nome": "Squirtle", "tipos": ["Agua"]},
-    25: {"numero": 25, "nome": "Pikachu", "tipos": ["Eletrico"]},
-    39: {"numero": 39, "nome": "Jigglypuff", "tipos": ["Normal", "Fada"]},
-    143: {"numero": 143, "nome": "Snorlax", "tipos": ["Normal"]},
-}
 
 
 def normalizar_nome(nome: str) -> str:
     return nome.strip().capitalize()
 
 
-def buscar_por_numero(numero: int) -> Pokemon | None:
+def listar(db: Session, tipo: str | None = None) -> list[Pokemon]:
+    if tipo is None:
+        return repository.list_all(db)
+    return listar_por_tipo(db, tipo)
+
+
+def buscar_por_numero(db: Session, numero: int) -> Pokemon | None:
     if not isinstance(numero, int) or isinstance(numero, bool) or numero <= 0:
         raise ValueError("numero deve ser um inteiro positivo")
-    return POKEDEX.get(numero)
+    return repository.get_by_numero(db, numero)
 
 
-def buscar_por_nome(nome: str) -> Pokemon | None:
-    nome_normalizado = normalizar_nome(nome)
-    for pokemon in POKEDEX.values():
-        if pokemon["nome"] == nome_normalizado:
-            return pokemon
-    return None
+def buscar_por_nome(db: Session, nome: str) -> Pokemon | None:
+    return repository.get_by_nome(db, normalizar_nome(nome))
 
 
-def listar_por_tipo(tipo: str) -> list[Pokemon]:
-    return [pokemon for pokemon in POKEDEX.values() if eh_do_tipo(pokemon, tipo)]
+def listar_por_tipo(db: Session, tipo: str) -> list[Pokemon]:
+    return repository.list_by_tipo(db, normalizar_nome(tipo))
 
 
 def eh_do_tipo(pokemon: Pokemon, tipo: str) -> bool:
-    tipo_normalizado = normalizar_nome(tipo)
-    return tipo_normalizado in pokemon["tipos"]
+    return normalizar_nome(tipo) in pokemon.tipos
 
 
-def criar(data: PokemonCreate) -> Pokemon:
-    if data.numero in POKEDEX:
+def criar(db: Session, data: PokemonCreate) -> Pokemon:
+    if repository.get_by_numero(db, data.numero) is not None:
         raise ValueError("numero ja existe")
-    entry: Pokemon = {"numero": data.numero, "nome": data.nome, "tipos": data.tipos}
-    POKEDEX[data.numero] = entry
-    return entry
+    return repository.create(db, data.numero, data.nome, data.tipos)
 
 
-def substituir(numero: int, data: PokemonBase) -> Pokemon | None:
-    if numero not in POKEDEX:
+def substituir(db: Session, numero: int, data: PokemonBase) -> Pokemon | None:
+    pokemon = repository.get_by_numero(db, numero)
+    if pokemon is None:
         return None
-    POKEDEX[numero] = {"numero": numero, "nome": data.nome, "tipos": data.tipos}
-    return POKEDEX[numero]
+    return repository.update(db, pokemon, data.nome, data.tipos)
 
 
-def atualizar(numero: int, data: PokemonUpdate) -> Pokemon | None:
-    if numero not in POKEDEX:
+def atualizar(db: Session, numero: int, data: PokemonUpdate) -> Pokemon | None:
+    pokemon = repository.get_by_numero(db, numero)
+    if pokemon is None:
         return None
-    if data.nome is not None:
-        POKEDEX[numero]["nome"] = data.nome
-    if data.tipos is not None:
-        POKEDEX[numero]["tipos"] = data.tipos
-    return POKEDEX[numero]
+    nome = data.nome if data.nome is not None else pokemon.nome
+    tipos = data.tipos if data.tipos is not None else pokemon.tipos
+    return repository.update(db, pokemon, nome, tipos)
 
 
-def remover(numero: int) -> bool:
-    if numero not in POKEDEX:
+def remover(db: Session, numero: int) -> bool:
+    pokemon = repository.get_by_numero(db, numero)
+    if pokemon is None:
         return False
-    del POKEDEX[numero]
+    repository.delete(db, pokemon)
     return True
