@@ -1,4 +1,5 @@
 import pytest
+from sqlalchemy import text
 
 pytestmark = pytest.mark.integration
 
@@ -167,3 +168,41 @@ def test_delete_pokemon_retorna_422_para_numero_invalido_no_path(client):
     resposta = client.delete("/pokemon/-1")
 
     assert resposta.status_code == 422
+
+
+# ---------------------------------------------------------------------------
+# Persistencia real no banco
+# ---------------------------------------------------------------------------
+
+
+def test_pokemon_criado_via_api_esta_persistido_no_banco(client, db_session):
+    payload = {"numero": 150, "nome": "Mewtwo", "tipos": ["Psiquico", "Lutador"]}
+    assert client.post("/pokemon", json=payload).status_code == 201
+
+    # Consulta SQL direta, em outra sessao: prova que a linha existe na tabela.
+    linha = db_session.execute(
+        text("SELECT numero, nome, tipos FROM pokemon WHERE numero = 150")
+    ).one()
+    assert tuple(linha) == (150, "Mewtwo", ["Psiquico", "Lutador"])
+
+    # E a API (sessao nova por requisicao) le o mesmo dado de volta, com ordem dos tipos.
+    resposta = client.get("/pokemon/150")
+    assert resposta.json() == payload
+
+
+def test_delete_via_api_remove_a_linha_do_banco(client, db_session):
+    client.delete("/pokemon/25")
+
+    total = db_session.execute(
+        text("SELECT count(*) FROM pokemon WHERE numero = 25")
+    ).scalar_one()
+    assert total == 0
+
+
+def test_isolamento_entre_testes_primeira_escrita(client):
+    client.post("/pokemon", json={"numero": 900, "nome": "Teste", "tipos": ["X"]})
+    assert client.get("/pokemon/900").status_code == 200
+
+
+def test_isolamento_entre_testes_segunda_leitura(client):
+    assert client.get("/pokemon/900").status_code == 404
