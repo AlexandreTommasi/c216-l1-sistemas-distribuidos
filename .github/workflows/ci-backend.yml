@@ -8,6 +8,24 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: c216
+          POSTGRES_PASSWORD: c216
+          POSTGRES_DB: c216_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U c216 -d c216_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql+psycopg://c216:c216@localhost:5432/c216_test
+
     defaults:
       run:
         working-directory: backend
@@ -37,6 +55,9 @@ jobs:
 
       - name: Instala as dependencias
         run: poetry install
+
+      - name: Aplica as migrations
+        run: poetry run alembic upgrade head
 
       - name: Testes unitarios
         run: poetry run pytest tests -m unit -v
