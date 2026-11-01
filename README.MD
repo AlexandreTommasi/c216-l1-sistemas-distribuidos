@@ -8,6 +8,7 @@ Aluno: Alexandre Tommasi Alves
 
 - Docker e Docker Compose
 - GNU Make
+- Node.js 22+ (apenas para o frontend)
 
 ## Como executar o ambiente
 
@@ -99,7 +100,76 @@ Para rodar com relatório de cobertura:
 make test-cov
 ```
 
-O CI (`.github/workflows/ci-backend.yml`) executa os dois grupos como steps distintos em todo `push` e `pull request`.
+O CI (`.github/workflows/ci-backend.yml`) executa os dois grupos como steps distintos em `push` e `pull request` que alteram `backend/`.
+
+## Frontend
+
+Interface do gerenciador de pokémon em `frontend/`, escrita em JavaScript puro (sem TypeScript).
+
+> Nesta etapa o frontend **não se comunica com o backend**: os pokémon ficam apenas no estado do React (`useState`) e são perdidos ao recarregar a página. A integração com `POST /pokemon` fica para a Prática 7.
+
+### Stack
+
+| Ferramenta | Uso |
+|------------|-----|
+| React 19 | Componentes da interface |
+| Vite | Servidor de desenvolvimento e build |
+| Tailwind CSS 4 | Estilização, via plugin `@tailwindcss/vite` |
+| Biome | Lint e formatação |
+| Vitest + Testing Library | Testes unitários e de integração |
+| Playwright | Testes end-to-end no Chromium |
+
+### Estrutura de pastas
+
+```text
+frontend/
+├── src/
+│   ├── components/
+│   │   ├── PokemonForm.jsx   # Formulário com validação e chips de tipo
+│   │   └── PokemonList.jsx   # Listagem em cards e estado vazio
+│   ├── App.jsx               # Estado dos pokémon e estrutura da página
+│   ├── main.jsx              # Ponto de entrada
+│   ├── validation.js         # validatePokemon (função pura) e constantes
+│   ├── typeStyles.js         # Cores de cada tipo de pokémon
+│   └── index.css             # Importa o Tailwind
+├── tests/
+│   ├── unit/                 # validation, PokemonForm e PokemonList
+│   ├── integration/          # App completo com user-event
+│   ├── e2e/                  # Playwright
+│   └── setup.js              # jest-dom e cleanup
+├── playwright.config.js
+├── vite.config.js
+└── biome.json
+```
+
+### Desenvolvimento
+
+Requer Node.js 22 ou superior. Da raiz do repositório:
+
+```bash
+make frontend-install   # npm ci
+make frontend-dev       # http://localhost:5173
+```
+
+### Testes
+
+| Nível | Diretório | Comando |
+|-------|-----------|---------|
+| Unitários | `tests/unit/` | `make frontend-test` |
+| Integração | `tests/integration/` | `make frontend-test` |
+| E2E | `tests/e2e/` | `make frontend-test-e2e` |
+
+O Vitest roda unitários e integração juntos. Na primeira execução dos testes E2E, instale o navegador com `npm --prefix frontend exec playwright install chromium`; o Playwright sobe o servidor do Vite sozinho.
+
+Qualidade de código e build:
+
+```bash
+make frontend-check   # lint e formatação com Biome
+make frontend-build   # build de produção
+make check-all        # backend e frontend completos
+```
+
+O CI (`.github/workflows/ci-frontend.yml`) roda lint, formatação, testes, build e E2E quando há mudanças em `frontend/`.
 
 ## Comandos disponíveis
 
