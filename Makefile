@@ -1,8 +1,9 @@
-.PHONY: help install update run lint format check test test-unit test-int test-cov clean build up down restart logs ps shell db-shell
+.PHONY: help install update run lint format check test test-unit test-int test-cov clean build up down restart logs ps shell db-shell frontend-install frontend-dev frontend-lint frontend-format frontend-check frontend-test frontend-test-e2e frontend-build check-all
 
 POETRY := poetry -C backend
 RUN := $(POETRY) run
 COMPOSE := docker compose
+NPM := npm --prefix frontend
 APP := backend.main:app
 HOST := 127.0.0.1
 PORT := 8000
@@ -33,6 +34,17 @@ help:
 	@echo   make ps        Lista o estado dos servicos
 	@echo   make shell     Abre um shell no container do backend
 	@echo   make db-shell  Abre o psql no container do banco
+	@echo.
+	@echo   Frontend
+	@echo   make frontend-install   Instala as dependencias do frontend (npm ci)
+	@echo   make frontend-dev       Sobe o servidor de desenvolvimento do frontend
+	@echo   make frontend-lint      Analisa o codigo do frontend com Biome
+	@echo   make frontend-format    Formata o codigo do frontend com Biome
+	@echo   make frontend-check     Valida lint e formatacao do frontend
+	@echo   make frontend-test      Roda os testes unitarios e de integracao do frontend
+	@echo   make frontend-test-e2e  Roda os testes e2e do frontend com Playwright
+	@echo   make frontend-build     Gera o build de producao do frontend
+	@echo   make check-all          Roda todas as verificacoes de backend e frontend
 	@echo.
 
 install:
@@ -91,3 +103,29 @@ shell:
 
 db-shell:
 	$(COMPOSE) exec db psql -U c216 -d c216
+
+frontend-install:
+	$(NPM) ci
+
+frontend-dev:
+	$(NPM) run dev
+
+frontend-lint:
+	$(NPM) run lint
+
+frontend-format:
+	$(NPM) run format
+
+frontend-check:
+	$(NPM) run check
+
+frontend-test:
+	$(NPM) run test
+
+frontend-test-e2e:
+	$(NPM) run test:e2e
+
+frontend-build:
+	$(NPM) run build
+
+check-all: check test frontend-check frontend-test frontend-build frontend-test-e2e
