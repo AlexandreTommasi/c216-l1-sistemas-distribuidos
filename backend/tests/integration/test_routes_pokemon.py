@@ -206,3 +206,22 @@ def test_isolamento_entre_testes_primeira_escrita(client):
 
 def test_isolamento_entre_testes_segunda_leitura(client):
     assert client.get("/pokemon/900").status_code == 404
+
+
+# ---------------------------------------------------------------------------
+# CORS
+# ---------------------------------------------------------------------------
+
+
+def test_cors_origem_permitida_recebe_header(client):
+    resposta = client.get("/pokemon", headers={"Origin": "http://localhost:5173"})
+
+    assert resposta.status_code == 200
+    assert resposta.headers.get("access-control-allow-origin") == "http://localhost:5173"
+
+
+def test_cors_origem_desconhecida_nao_recebe_header(client):
+    resposta = client.get("/pokemon", headers={"Origin": "http://evil.example.com"})
+
+    assert resposta.status_code == 200
+    assert "access-control-allow-origin" not in resposta.headers
