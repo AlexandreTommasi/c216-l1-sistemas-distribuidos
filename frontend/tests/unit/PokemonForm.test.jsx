@@ -125,7 +125,10 @@ describe("PokemonForm", () => {
   it("desabilita o botão enquanto a requisição está em andamento", async () => {
     let resolveOnAdd;
     const pendingOnAdd = vi.fn(
-      () => new Promise((resolve) => { resolveOnAdd = resolve; }),
+      () =>
+        new Promise((resolve) => {
+          resolveOnAdd = resolve;
+        }),
     );
     const { user } = setup(pendingOnAdd);
 
@@ -136,9 +139,7 @@ describe("PokemonForm", () => {
     // Dispara o submit — o handler fica suspenso no await onAdd()
     await user.click(adicionar());
 
-    expect(
-      screen.getByRole("button", { name: "Salvando..." }),
-    ).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Salvando..." })).toBeDisabled();
 
     // Resolve a promise e aguarda o botão voltar ao estado normal
     resolveOnAdd();
@@ -161,14 +162,14 @@ describe("PokemonForm", () => {
     await user.click(adicionar());
 
     await waitFor(() =>
-      expect(screen.getByRole("alert")).toHaveTextContent(
-        "numero ja existe",
-      ),
+      expect(screen.getByRole("alert")).toHaveTextContent("numero ja existe"),
     );
     // Campos mantidos após erro
     expect(screen.getByLabelText("Nome")).toHaveValue("Pikachu");
     expect(screen.getByLabelText("Elétrico")).toBeChecked();
     // Botão habilitado novamente
-    expect(screen.getByRole("button", { name: "Adicionar" })).not.toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "Adicionar" }),
+    ).not.toBeDisabled();
   });
 });

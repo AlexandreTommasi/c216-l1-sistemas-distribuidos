@@ -32,7 +32,10 @@ const PIKACHU = { numero: 25, nome: "Pikachu", tipos: ["Elétrico"] };
 
 describe("carregamento inicial", () => {
   it("exibe o título Pokédex sempre que renderiza", () => {
-    vi.stubGlobal("fetch", vi.fn(() => new Promise(() => {})));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => new Promise(() => {})),
+    );
     render(<App />);
 
     expect(
@@ -41,7 +44,10 @@ describe("carregamento inicial", () => {
   });
 
   it("exibe 'Carregando pokémon...' antes da resposta chegar", () => {
-    vi.stubGlobal("fetch", vi.fn(() => new Promise(() => {})));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => new Promise(() => {})),
+    );
     render(<App />);
 
     expect(screen.getByText("Carregando pokémon...")).toBeInTheDocument();
@@ -119,8 +125,8 @@ describe("cadastro", () => {
   it("adiciona pokémon com sucesso e exibe na lista", async () => {
     const user = userEvent.setup();
     stubFetch(
-      { status: 200, body: [] },        // GET /pokemon no mount
-      { status: 201, body: PIKACHU },   // POST /pokemon
+      { status: 200, body: [] }, // GET /pokemon no mount
+      { status: 201, body: PIKACHU }, // POST /pokemon
     );
     render(<App />);
 
@@ -153,9 +159,7 @@ describe("cadastro", () => {
     await user.click(screen.getByRole("button", { name: "Adicionar" }));
 
     await waitFor(() =>
-      expect(screen.getByRole("alert")).toHaveTextContent(
-        "numero ja existe",
-      ),
+      expect(screen.getByRole("alert")).toHaveTextContent("numero ja existe"),
     );
     // campos preservados
     expect(screen.getByLabelText("Nome")).toHaveValue("Pikachu");

@@ -20,7 +20,9 @@ test.describe("Pokédex E2E", () => {
   // Validação local — não chega ao servidor
   // ---------------------------------------------------------------------------
 
-  test("exibe erros de validação sem submeter ao servidor", async ({ page }) => {
+  test("exibe erros de validação sem submeter ao servidor", async ({
+    page,
+  }) => {
     await page.getByRole("button", { name: "Adicionar" }).click();
 
     await expect(page.getByText("O número é obrigatório.")).toBeVisible();

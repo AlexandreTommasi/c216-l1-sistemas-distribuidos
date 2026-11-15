@@ -25,7 +25,10 @@ afterEach(() => vi.unstubAllGlobals());
 describe("listPokemon", () => {
   it("faz GET /pokemon e retorna a lista", async () => {
     const data = [{ numero: 1, nome: "Bulbasaur", tipos: ["Grama"] }];
-    vi.stubGlobal("fetch", vi.fn(() => jsonResp(200, data)));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => jsonResp(200, data)),
+    );
 
     const result = await listPokemon();
 
@@ -41,7 +44,10 @@ describe("listPokemon", () => {
 describe("createPokemon", () => {
   it("faz POST /pokemon com o corpo e os headers corretos", async () => {
     const payload = { numero: 25, nome: "Pikachu", tipos: ["Elétrico"] };
-    vi.stubGlobal("fetch", vi.fn(() => jsonResp(201, payload)));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => jsonResp(201, payload)),
+    );
 
     const result = await createPokemon(payload);
 
@@ -68,7 +74,10 @@ describe("createPokemon", () => {
   });
 
   it("lança erro genérico quando o body não tem detail", async () => {
-    vi.stubGlobal("fetch", vi.fn(() => jsonResp(500, {})));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => jsonResp(500, {})),
+    );
 
     await expect(
       createPokemon({ numero: 1, nome: "X", tipos: [] }),
@@ -83,7 +92,10 @@ describe("createPokemon", () => {
 describe("updatePokemon", () => {
   it("faz PATCH /pokemon/:numero com o corpo correto", async () => {
     const patch = { nome: "Raichu" };
-    vi.stubGlobal("fetch", vi.fn(() => jsonResp(200, { ...patch, numero: 25 })));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => jsonResp(200, { ...patch, numero: 25 })),
+    );
 
     await updatePokemon(25, patch);
 
@@ -107,14 +119,20 @@ describe("deletePokemon", () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(() =>
-        Promise.resolve({ ok: true, status: 204, json: () => Promise.resolve(null) }),
+        Promise.resolve({
+          ok: true,
+          status: 204,
+          json: () => Promise.resolve(null),
+        }),
       ),
     );
 
     const result = await deletePokemon(25);
 
     expect(result).toBeNull();
-    expect(fetch).toHaveBeenCalledWith(`${BASE}/pokemon/25`, { method: "DELETE" });
+    expect(fetch).toHaveBeenCalledWith(`${BASE}/pokemon/25`, {
+      method: "DELETE",
+    });
   });
 });
 
