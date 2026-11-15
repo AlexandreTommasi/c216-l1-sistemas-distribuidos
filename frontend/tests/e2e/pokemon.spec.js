@@ -1,40 +1,77 @@
 import { expect, test } from "@playwright/test";
 
-test.beforeEach(async ({ page }) => {
-  await page.goto("/");
-});
+// Números únicos por execução para não colidir com o seed (1,4,7,25,39,143)
+// nem com outras execuções paralelas.
+const NUM_A = 1000 + (Date.now() % 8000);
+const NUM_B = NUM_A + 1;
 
-test("carrega a interface com o estado vazio", async ({ page }) => {
-  await expect(
-    page.getByRole("heading", { level: 1, name: "Pokédex" }),
-  ).toBeVisible();
-  await expect(page.getByLabel("Número")).toBeVisible();
-  await expect(page.getByLabel("Nome")).toBeVisible();
-  await expect(page.getByText("Nenhum pokémon cadastrado.")).toBeVisible();
-});
+function formatNumero(n) {
+  return `#${String(n).padStart(3, "0")}`;
+}
 
-test("cadastra um pokémon e o exibe na listagem", async ({ page }) => {
-  await page.getByLabel("Número").fill("6");
-  await page.getByLabel("Nome").fill("Charizard");
-  await page.getByLabel("Fogo").check({ force: true });
-  await page.getByLabel("Voador").check({ force: true });
-  await page.getByRole("button", { name: "Adicionar" }).click();
+test.describe("Pokédex E2E", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/");
+    // Aguarda o carregamento inicial resolver antes de cada cenário.
+    await expect(page.getByText("Carregando pokémon...")).toBeHidden();
+  });
 
-  const tipos = page.getByRole("list", { name: "Tipos" });
-  await expect(page.getByText("#006")).toBeVisible();
-  await expect(page.getByText("Charizard")).toBeVisible();
-  await expect(tipos.getByText("Fogo")).toBeVisible();
-  await expect(tipos.getByText("Voador")).toBeVisible();
-  await expect(page.getByText("Nenhum pokémon cadastrado.")).toBeHidden();
-  await expect(page.getByLabel("Nome")).toHaveValue("");
-});
+  // ---------------------------------------------------------------------------
+  // Validação local — não chega ao servidor
+  // ---------------------------------------------------------------------------
 
-test("exibe erros de validação e não adiciona nada", async ({ page }) => {
-  await page.getByRole("button", { name: "Adicionar" }).click();
+  test("exibe erros de validação sem submeter ao servidor", async ({ page }) => {
+    await page.getByRole("button", { name: "Adicionar" }).click();
 
-  await expect(page.getByText("O número é obrigatório.")).toBeVisible();
-  await expect(page.getByText("O nome é obrigatório.")).toBeVisible();
-  await expect(page.getByText("Selecione pelo menos um tipo.")).toBeVisible();
-  await expect(page.getByRole("alert")).toHaveCount(3);
-  await expect(page.getByText("Nenhum pokémon cadastrado.")).toBeVisible();
+    await expect(page.getByText("O número é obrigatório.")).toBeVisible();
+    await expect(page.getByText("O nome é obrigatório.")).toBeVisible();
+    await expect(page.getByText("Selecione pelo menos um tipo.")).toBeVisible();
+    await expect(page.getByRole("alert")).toHaveCount(3);
+  });
+
+  // ---------------------------------------------------------------------------
+  // Persistência real: cadastra → aparece → reload → continua lá
+  // ---------------------------------------------------------------------------
+
+  test("cadastra pokémon e persiste após reload", async ({ page }) => {
+    await page.getByLabel("Número").fill(String(NUM_A));
+    await page.getByLabel("Nome").fill("TestePersistente");
+    await page.getByLabel("Normal").check({ force: true });
+    await page.getByRole("button", { name: "Adicionar" }).click();
+
+    // Aparece na listagem imediatamente após o POST
+    await expect(page.getByText(formatNumero(NUM_A))).toBeVisible();
+    await expect(page.getByText("TestePersistente")).toBeVisible();
+    // Formulário foi limpo
+    await expect(page.getByLabel("Nome")).toHaveValue("");
+
+    // Após reload os dados vêm da API (que lê o banco)
+    await page.reload();
+    await expect(page.getByText("Carregando pokémon...")).toBeHidden();
+    await expect(page.getByText(formatNumero(NUM_A))).toBeVisible();
+    await expect(page.getByText("TestePersistente")).toBeVisible();
+  });
+
+  // ---------------------------------------------------------------------------
+  // Erro de número duplicado vindo da API (409)
+  // ---------------------------------------------------------------------------
+
+  test("exibe erro de número duplicado vindo da API", async ({ page }) => {
+    // Cria o pokémon original com sucesso
+    await page.getByLabel("Número").fill(String(NUM_B));
+    await page.getByLabel("Nome").fill("PokemonOriginal");
+    await page.getByLabel("Normal").check({ force: true });
+    await page.getByRole("button", { name: "Adicionar" }).click();
+    await expect(page.getByText("PokemonOriginal")).toBeVisible();
+
+    // Segunda tentativa com o mesmo número deve retornar 409
+    await page.getByLabel("Número").fill(String(NUM_B));
+    await page.getByLabel("Nome").fill("PokemonDuplicado");
+    await page.getByLabel("Normal").check({ force: true });
+    await page.getByRole("button", { name: "Adicionar" }).click();
+
+    await expect(page.getByRole("alert")).toContainText("numero ja existe");
+    // Campos preservados após o erro
+    await expect(page.getByLabel("Nome")).toHaveValue("PokemonDuplicado");
+  });
 });

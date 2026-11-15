@@ -5,19 +5,39 @@ on:
     branches: [aulas]
     paths:
       - "frontend/**"
+      - "backend/**"
       - ".github/workflows/ci-frontend.yml"
   pull_request:
     paths:
       - "frontend/**"
+      - "backend/**"
       - ".github/workflows/ci-frontend.yml"
 
 jobs:
   test:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: c216
+          POSTGRES_PASSWORD: c216
+          POSTGRES_DB: c216
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U c216"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     defaults:
       run:
         working-directory: frontend
+
+    env:
+      DATABASE_URL: postgresql+psycopg://c216:c216@localhost:5432/c216
 
     steps:
       - name: Checkout do codigo
@@ -30,7 +50,7 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
-      - name: Instala as dependencias
+      - name: Instala as dependencias do frontend
         run: npm ci
 
       - name: Lint
@@ -45,11 +65,58 @@ jobs:
       - name: Build
         run: npm run build
 
+      # --- Backend para o E2E ---
+
+      - name: Configura o Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Instala o Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Cache das dependencias do backend
+        uses: actions/cache@v4
+        with:
+          path: backend/.venv
+          key: poetry-${{ runner.os }}-${{ hashFiles('backend/poetry.lock') }}
+          restore-keys: |
+            poetry-${{ runner.os }}-
+
+      - name: Instala as dependencias do backend
+        run: poetry install
+        working-directory: backend
+
+      - name: Aplica as migrations
+        run: poetry run alembic upgrade head
+        working-directory: backend
+
+      - name: Sobe o backend em background
+        run: |
+          CORS_ORIGINS="http://127.0.0.1:5173" \
+            poetry run uvicorn backend.main:app --host 127.0.0.1 --port 8000 &
+        working-directory: backend
+
+      - name: Aguarda o backend ficar disponivel
+        run: |
+          for i in $(seq 1 30); do
+            curl -sf http://127.0.0.1:8000/health && break
+            sleep 1
+          done
+        working-directory: backend
+
+      # --- E2E ---
+
       - name: Instala o Chromium do Playwright
         run: npx playwright install --with-deps chromium
 
       - name: Testes e2e
         run: npm run test:e2e
+        env:
+          VITE_API_URL: http://127.0.0.1:8000
 
       - name: Publica o relatorio do Playwright
         if: failure()

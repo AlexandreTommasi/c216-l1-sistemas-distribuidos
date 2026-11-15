@@ -1,4 +1,4 @@
-.PHONY: help install update run lint format check test test-unit test-int test-cov clean build rebuild up down restart logs ps shell db-shell db-upgrade db-downgrade db-migration db-current db-history frontend-install frontend-dev frontend-lint frontend-format frontend-check frontend-test frontend-test-e2e frontend-build frontend-logs frontend-shell check-all
+.PHONY: help install update run lint format check test test-unit test-int test-cov clean build rebuild up down restart logs ps shell db-shell db-upgrade db-downgrade db-migration db-current db-history frontend-install frontend-dev frontend-lint frontend-format frontend-check frontend-test frontend-test-e2e frontend-build frontend-logs frontend-shell check-all e2e
 
 POETRY := poetry -C backend
 RUN := $(POETRY) run
@@ -37,6 +37,7 @@ help:
 	@echo   make db-shell       Abre o psql no container do banco
 	@echo   make frontend-logs  Acompanha os logs do frontend
 	@echo   make frontend-shell Abre um shell no container do frontend
+	@echo   make e2e            Sobe stack isolada, roda Playwright e derruba tudo
 	@echo.
 	@echo   Migrations (Alembic)
 	@echo   make db-upgrade               Aplica as migrations pendentes
@@ -161,5 +162,16 @@ frontend-logs:
 
 frontend-shell:
 	$(COMPOSE) exec frontend sh
+
+# Stack isolada para E2E: projeto proprio, portas diferentes, volume proprio.
+# Sobe tudo, roda o Playwright e derruba com down -v independente do resultado.
+e2e:
+	BACKEND_PORT=8001 FRONTEND_PORT=5174 \
+	    CORS_ORIGINS="http://localhost:5174,http://127.0.0.1:5174" \
+	    $(COMPOSE) -p lab-e2e up --build --wait; \
+	  E2E_BASE_URL=http://localhost:5174 $(NPM) run test:e2e; ec=$$?; \
+	  BACKEND_PORT=8001 FRONTEND_PORT=5174 \
+	    $(COMPOSE) -p lab-e2e down -v; \
+	  exit $$ec
 
 check-all: check test frontend-check frontend-test frontend-build frontend-test-e2e
