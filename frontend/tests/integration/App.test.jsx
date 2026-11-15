@@ -1,86 +1,166 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import App from "../../src/App";
 
-async function cadastrar(user, { numero, nome, tipos }) {
-  await user.type(screen.getByLabelText("Número"), numero);
-  await user.type(screen.getByLabelText("Nome"), nome);
-  for (const tipo of tipos) {
-    await user.click(screen.getByLabelText(tipo));
-  }
-  await user.click(screen.getByRole("button", { name: "Adicionar" }));
+afterEach(() => vi.unstubAllGlobals());
+
+// ---------------------------------------------------------------------------
+// Helper: configura o fetch global para responder sequencialmente
+// ---------------------------------------------------------------------------
+
+function stubFetch(...responses) {
+  let i = 0;
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(() => {
+      const { status, body } = responses[Math.min(i++, responses.length - 1)];
+      return Promise.resolve({
+        ok: status >= 200 && status < 300,
+        status,
+        json: () => Promise.resolve(body),
+      });
+    }),
+  );
 }
 
-describe("App", () => {
-  it("começa com o título e a lista vazia", () => {
+const PIKACHU = { numero: 25, nome: "Pikachu", tipos: ["Elétrico"] };
+
+// ---------------------------------------------------------------------------
+// Carregamento inicial
+// ---------------------------------------------------------------------------
+
+describe("carregamento inicial", () => {
+  it("exibe o título Pokédex sempre que renderiza", () => {
+    vi.stubGlobal("fetch", vi.fn(() => new Promise(() => {})));
     render(<App />);
 
     expect(
       screen.getByRole("heading", { level: 1, name: "Pokédex" }),
     ).toBeInTheDocument();
-    expect(screen.getByText("Nenhum pokémon cadastrado.")).toBeInTheDocument();
   });
 
-  it("cadastra um pokémon e o exibe na lista", async () => {
-    const user = userEvent.setup();
+  it("exibe 'Carregando pokémon...' antes da resposta chegar", () => {
+    vi.stubGlobal("fetch", vi.fn(() => new Promise(() => {})));
     render(<App />);
 
-    await cadastrar(user, {
-      numero: "25",
-      nome: "Pikachu",
-      tipos: ["Elétrico"],
-    });
+    expect(screen.getByText("Carregando pokémon...")).toBeInTheDocument();
+  });
 
-    expect(screen.getByText("#025")).toBeInTheDocument();
-    expect(screen.getByText("Pikachu")).toBeInTheDocument();
-    expect(screen.getByRole("list", { name: "Tipos" })).toHaveTextContent(
-      "Elétrico",
-    );
+  it("exibe lista vazia quando a API retorna array vazio", async () => {
+    stubFetch({ status: 200, body: [] });
+    render(<App />);
+
     expect(
-      screen.queryByText("Nenhum pokémon cadastrado."),
-    ).not.toBeInTheDocument();
-    expect(screen.getByLabelText("Nome")).toHaveValue("");
+      await screen.findByText("Nenhum pokémon cadastrado."),
+    ).toBeInTheDocument();
   });
 
-  it("acumula vários pokémon, com mais de um tipo", async () => {
-    const user = userEvent.setup();
+  it("exibe os pokémon vindos da API", async () => {
+    stubFetch({ status: 200, body: [PIKACHU] });
     render(<App />);
 
-    await cadastrar(user, {
-      numero: "6",
-      nome: "Charizard",
-      tipos: ["Fogo", "Voador"],
-    });
-    await cadastrar(user, { numero: "7", nome: "Squirtle", tipos: ["Água"] });
-
-    expect(screen.getByText("#006")).toBeInTheDocument();
-    expect(screen.getByText("Charizard")).toBeInTheDocument();
-    expect(screen.getByText("#007")).toBeInTheDocument();
-    expect(screen.getByText("Squirtle")).toBeInTheDocument();
-    expect(screen.getAllByRole("list", { name: "Tipos" })).toHaveLength(2);
+    expect(await screen.findByText("Pikachu")).toBeInTheDocument();
+    expect(screen.getByText("#025")).toBeInTheDocument();
   });
 
-  it("não adiciona nada à lista num envio inválido", async () => {
-    const user = userEvent.setup();
+  it("exibe alerta de erro quando a API é inacessível", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => Promise.reject(new TypeError("Failed to fetch"))),
+    );
     render(<App />);
 
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "API inacessível",
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Validação local (não chega ao servidor)
+// ---------------------------------------------------------------------------
+
+describe("validação local", () => {
+  it("não adiciona nada à lista num envio completamente vazio", async () => {
+    const user = userEvent.setup();
+    stubFetch({ status: 200, body: [] });
+    render(<App />);
+
+    await screen.findByText("Nenhum pokémon cadastrado.");
     await user.click(screen.getByRole("button", { name: "Adicionar" }));
 
     expect(screen.getAllByRole("alert")).toHaveLength(3);
     expect(screen.getByText("Nenhum pokémon cadastrado.")).toBeInTheDocument();
   });
 
-  it("não adiciona um pokémon sem tipo", async () => {
+  it("não adiciona um pokémon sem tipo selecionado", async () => {
     const user = userEvent.setup();
+    stubFetch({ status: 200, body: [] });
     render(<App />);
 
-    await cadastrar(user, { numero: "1", nome: "Bulbasaur", tipos: [] });
+    await screen.findByText("Nenhum pokémon cadastrado.");
+    await user.type(screen.getByLabelText("Número"), "1");
+    await user.type(screen.getByLabelText("Nome"), "Bulbasaur");
+    await user.click(screen.getByRole("button", { name: "Adicionar" }));
 
     expect(
       screen.getByText("Selecione pelo menos um tipo."),
     ).toBeInTheDocument();
-    expect(screen.getByText("Nenhum pokémon cadastrado.")).toBeInTheDocument();
     expect(screen.queryByText("Bulbasaur")).not.toBeInTheDocument();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Cadastro
+// ---------------------------------------------------------------------------
+
+describe("cadastro", () => {
+  it("adiciona pokémon com sucesso e exibe na lista", async () => {
+    const user = userEvent.setup();
+    stubFetch(
+      { status: 200, body: [] },        // GET /pokemon no mount
+      { status: 201, body: PIKACHU },   // POST /pokemon
+    );
+    render(<App />);
+
+    await screen.findByText("Nenhum pokémon cadastrado.");
+
+    await user.type(screen.getByLabelText("Número"), "25");
+    await user.type(screen.getByLabelText("Nome"), "Pikachu");
+    await user.click(screen.getByLabelText("Elétrico"));
+    await user.click(screen.getByRole("button", { name: "Adicionar" }));
+
+    expect(await screen.findByText("Pikachu")).toBeInTheDocument();
+    expect(screen.getByText("#025")).toBeInTheDocument();
+    // formulário limpo após sucesso
+    expect(screen.getByLabelText("Nome")).toHaveValue("");
+  });
+
+  it("exibe erro do backend (409) no formulário sem apagar os campos", async () => {
+    const user = userEvent.setup();
+    stubFetch(
+      { status: 200, body: [] },
+      { status: 409, body: { detail: "numero ja existe" } },
+    );
+    render(<App />);
+
+    await screen.findByText("Nenhum pokémon cadastrado.");
+
+    await user.type(screen.getByLabelText("Número"), "25");
+    await user.type(screen.getByLabelText("Nome"), "Pikachu");
+    await user.click(screen.getByLabelText("Elétrico"));
+    await user.click(screen.getByRole("button", { name: "Adicionar" }));
+
+    await waitFor(() =>
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        "numero ja existe",
+      ),
+    );
+    // campos preservados
+    expect(screen.getByLabelText("Nome")).toHaveValue("Pikachu");
+    expect(screen.getByLabelText("Elétrico")).toBeChecked();
+    // lista não mudou
+    expect(screen.getByText("Nenhum pokémon cadastrado.")).toBeInTheDocument();
   });
 });

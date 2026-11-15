@@ -1,16 +1,16 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import PokemonForm from "../../src/components/PokemonForm";
 
-function setup() {
-  const onAdd = vi.fn();
+function setup(onAdd) {
+  const handler = onAdd ?? vi.fn();
   const user = userEvent.setup();
-  render(<PokemonForm onAdd={onAdd} />);
-  return { onAdd, user };
+  render(<PokemonForm onAdd={handler} />);
+  return { onAdd: handler, user };
 }
 
-const adicionar = () => screen.getByRole("button", { name: "Adicionar" });
+const adicionar = () => screen.getByRole("button", { name: /adicionar/i });
 
 describe("PokemonForm", () => {
   it("renderiza os campos com rótulo e os doze tipos", () => {
@@ -116,5 +116,59 @@ describe("PokemonForm", () => {
 
     expect(onAdd).toHaveBeenCalledTimes(1);
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  // -------------------------------------------------------------------------
+  // Comportamento assíncrono (integração com a API)
+  // -------------------------------------------------------------------------
+
+  it("desabilita o botão enquanto a requisição está em andamento", async () => {
+    let resolveOnAdd;
+    const pendingOnAdd = vi.fn(
+      () => new Promise((resolve) => { resolveOnAdd = resolve; }),
+    );
+    const { user } = setup(pendingOnAdd);
+
+    await user.type(screen.getByLabelText("Número"), "25");
+    await user.type(screen.getByLabelText("Nome"), "Pikachu");
+    await user.click(screen.getByLabelText("Elétrico"));
+
+    // Dispara o submit — o handler fica suspenso no await onAdd()
+    await user.click(adicionar());
+
+    expect(
+      screen.getByRole("button", { name: "Salvando..." }),
+    ).toBeDisabled();
+
+    // Resolve a promise e aguarda o botão voltar ao estado normal
+    resolveOnAdd();
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", { name: "Adicionar" }),
+      ).not.toBeDisabled(),
+    );
+  });
+
+  it("exibe erro da API e mantém os campos preenchidos", async () => {
+    const failOnAdd = vi.fn(() =>
+      Promise.reject(new Error("numero ja existe")),
+    );
+    const { user } = setup(failOnAdd);
+
+    await user.type(screen.getByLabelText("Número"), "25");
+    await user.type(screen.getByLabelText("Nome"), "Pikachu");
+    await user.click(screen.getByLabelText("Elétrico"));
+    await user.click(adicionar());
+
+    await waitFor(() =>
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        "numero ja existe",
+      ),
+    );
+    // Campos mantidos após erro
+    expect(screen.getByLabelText("Nome")).toHaveValue("Pikachu");
+    expect(screen.getByLabelText("Elétrico")).toBeChecked();
+    // Botão habilitado novamente
+    expect(screen.getByRole("button", { name: "Adicionar" })).not.toBeDisabled();
   });
 });
