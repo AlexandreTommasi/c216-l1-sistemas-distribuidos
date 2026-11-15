@@ -11,10 +11,13 @@ class Settings(BaseSettings):
     )
 
     database_url: str
-    cors_origins: list[str] = [
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-    ]
+    # Mantido como str para evitar que o pydantic-settings tente json.loads()
+    # antes de qualquer validator. A lista é derivada pela property abaixo.
+    cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
+
+    @property
+    def cors_origins_list(self) -> list[str]:
+        return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
 
     @field_validator("database_url")
     @classmethod
@@ -23,13 +26,6 @@ class Settings(BaseSettings):
         if valor.startswith("postgresql://"):
             return valor.replace("postgresql://", "postgresql+psycopg://", 1)
         return valor
-
-    @field_validator("cors_origins", mode="before")
-    @classmethod
-    def parse_cors_origins(cls, v):
-        if isinstance(v, str):
-            return [o.strip() for o in v.split(",") if o.strip()]
-        return v
 
 
 @lru_cache
