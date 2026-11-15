@@ -23,6 +23,8 @@ export default function PokemonForm({ onAdd }) {
   const [nome, setNome] = useState("");
   const [tipos, setTipos] = useState([]);
   const [errors, setErrors] = useState({});
+  const [saving, setSaving] = useState(false);
+  const [apiError, setApiError] = useState(null);
 
   function toggleTipo(tipo) {
     setTipos((atuais) =>
@@ -32,16 +34,24 @@ export default function PokemonForm({ onAdd }) {
     );
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
     const result = validatePokemon({ numero, nome, tipos });
     setErrors(result.errors);
     if (Object.keys(result.errors).length > 0) return;
 
-    onAdd(result.values);
-    setNumero("");
-    setNome("");
-    setTipos([]);
+    setSaving(true);
+    setApiError(null);
+    try {
+      await onAdd(result.values);
+      setNumero("");
+      setNome("");
+      setTipos([]);
+    } catch (err) {
+      setApiError(err.message);
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -120,11 +130,21 @@ export default function PokemonForm({ onAdd }) {
         <FieldError id="tipos-error" message={errors.tipos} />
       </fieldset>
 
+      {apiError && (
+        <p
+          role="alert"
+          className="rounded-lg border-2 border-red-300 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700"
+        >
+          {apiError}
+        </p>
+      )}
+
       <button
         type="submit"
-        className="w-full rounded-lg border-b-4 border-red-900 bg-red-600 px-4 py-3 font-extrabold tracking-wide text-white uppercase shadow transition hover:bg-red-500 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-600/40 focus-visible:ring-offset-2 active:translate-y-0.5 active:border-b-2 sm:w-auto"
+        disabled={saving}
+        className="w-full rounded-lg border-b-4 border-red-900 bg-red-600 px-4 py-3 font-extrabold tracking-wide text-white uppercase shadow transition hover:bg-red-500 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-red-600/40 focus-visible:ring-offset-2 active:translate-y-0.5 active:border-b-2 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
       >
-        Adicionar
+        {saving ? "Salvando..." : "Adicionar"}
       </button>
     </form>
   );

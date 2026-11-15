@@ -1,13 +1,23 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import PokemonForm from "./components/PokemonForm";
 import PokemonList from "./components/PokemonList";
+import { createPokemon, listPokemon } from "./services/pokemon";
 
 export default function App() {
   const [pokemons, setPokemons] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
 
-  // Na Prática 7, esta função chamará POST /pokemon no backend.
-  function addPokemon(pokemon) {
-    setPokemons((atuais) => [...atuais, pokemon]);
+  useEffect(() => {
+    listPokemon()
+      .then(setPokemons)
+      .catch((err) => setLoadError(err.message))
+      .finally(() => setLoading(false));
+  }, []);
+
+  async function addPokemon(data) {
+    const created = await createPokemon(data);
+    setPokemons((atuais) => [...atuais, created]);
   }
 
   return (
@@ -46,7 +56,20 @@ export default function App() {
             >
               Pokémon cadastrados
             </h2>
-            <PokemonList pokemons={pokemons} />
+            {loading ? (
+              <p className="text-center text-stone-600">
+                Carregando pokémon...
+              </p>
+            ) : loadError ? (
+              <p
+                role="alert"
+                className="rounded-lg border-2 border-red-300 bg-red-50 p-4 text-red-700"
+              >
+                {loadError}
+              </p>
+            ) : (
+              <PokemonList pokemons={pokemons} />
+            )}
           </section>
         </div>
       </main>
