@@ -1,4 +1,4 @@
-.PHONY: help install update run lint format check test test-unit test-int test-cov clean build up down restart logs ps shell db-shell db-upgrade db-downgrade db-migration db-current db-history frontend-install frontend-dev frontend-lint frontend-format frontend-check frontend-test frontend-test-e2e frontend-build check-all
+.PHONY: help install update run lint format check test test-unit test-int test-cov clean build rebuild up down restart logs ps shell db-shell db-upgrade db-downgrade db-migration db-current db-history frontend-install frontend-dev frontend-lint frontend-format frontend-check frontend-test frontend-test-e2e frontend-build frontend-logs frontend-shell check-all
 
 POETRY := poetry -C backend
 RUN := $(POETRY) run
@@ -26,14 +26,17 @@ help:
 	@echo   make clean     Remove caches e arquivos temporarios
 	@echo.
 	@echo   Ambiente containerizado
-	@echo   make build     Constroi as imagens dos servicos
-	@echo   make up        Sobe o ambiente em background
-	@echo   make down      Encerra os servicos
-	@echo   make restart   Reinicia o servico de backend
-	@echo   make logs      Acompanha os logs do backend
-	@echo   make ps        Lista o estado dos servicos
-	@echo   make shell     Abre um shell no container do backend
-	@echo   make db-shell  Abre o psql no container do banco
+	@echo   make build          Constroi as imagens dos servicos
+	@echo   make rebuild        Reconstroi as imagens e sobe a stack
+	@echo   make up             Sobe o ambiente em background
+	@echo   make down           Encerra os servicos
+	@echo   make restart        Reinicia o servico de backend
+	@echo   make logs           Acompanha os logs do backend
+	@echo   make ps             Lista o estado dos servicos
+	@echo   make shell          Abre um shell no container do backend
+	@echo   make db-shell       Abre o psql no container do banco
+	@echo   make frontend-logs  Acompanha os logs do frontend
+	@echo   make frontend-shell Abre um shell no container do frontend
 	@echo.
 	@echo   Migrations (Alembic)
 	@echo   make db-upgrade               Aplica as migrations pendentes
@@ -89,6 +92,9 @@ clean:
 
 build:
 	$(COMPOSE) build
+
+rebuild:
+	$(COMPOSE) up -d --build
 
 up:
 	$(COMPOSE) up -d
@@ -149,5 +155,11 @@ frontend-test-e2e:
 
 frontend-build:
 	$(NPM) run build
+
+frontend-logs:
+	$(COMPOSE) logs -f frontend
+
+frontend-shell:
+	$(COMPOSE) exec frontend sh
 
 check-all: check test frontend-check frontend-test frontend-build frontend-test-e2e
