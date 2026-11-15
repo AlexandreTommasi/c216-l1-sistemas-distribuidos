@@ -1,3 +1,10 @@
+x-backend: &backend
+  build:
+    context: ./backend
+  image: c216-backend:latest
+  environment:
+    DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-c216}:${POSTGRES_PASSWORD:-c216}@db:5432/${POSTGRES_DB:-c216}
+
 services:
   db:
     image: postgres:16-alpine
@@ -17,18 +24,25 @@ services:
       timeout: 5s
       retries: 5
 
-  backend:
-    build:
-      context: ./backend
-    container_name: c216-backend
-    restart: unless-stopped
-    environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-c216}:${POSTGRES_PASSWORD:-c216}@db:5432/${POSTGRES_DB:-c216}
-    ports:
-      - "${BACKEND_PORT:-8000}:8000"
+  # Servico one-shot: aplica as migrations e termina. O backend so sobe se ele concluir com sucesso.
+  migrate:
+    <<: *backend
+    container_name: c216-migrate
+    command: ["alembic", "upgrade", "head"]
+    restart: "no"
     depends_on:
       db:
         condition: service_healthy
+
+  backend:
+    <<: *backend
+    container_name: c216-backend
+    restart: unless-stopped
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
 
 volumes:
   postgres_data:
