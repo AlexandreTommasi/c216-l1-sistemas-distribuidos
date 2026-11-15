@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class PokemonBase(BaseModel):
@@ -16,4 +16,6 @@ class PokemonUpdate(BaseModel):
 
 
 class PokemonResponse(PokemonBase):
+    model_config = ConfigDict(from_attributes=True)
+
     numero: int
