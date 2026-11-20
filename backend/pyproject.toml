@@ -40,6 +40,7 @@ ignore = []
 
 [tool.ruff.lint.isort]
 known-first-party = ["overload"]
+known-third-party = ["alembic", "sqlalchemy", "fastapi", "uvicorn", "pydantic", "pydantic_settings"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

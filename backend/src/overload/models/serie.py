@@ -23,9 +23,7 @@ class TipoSerie(enum.StrEnum):
 
 class Serie(Base):
     __tablename__ = "serie"
-    __table_args__ = (
-        Index("ix_serie_exercicio_sessao", "exercicio_id", "sessao_id"),
-    )
+    __table_args__ = (Index("ix_serie_exercicio_sessao", "exercicio_id", "sessao_id"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
     sessao_id: Mapped[int] = mapped_column(ForeignKey("sessao.id", ondelete="CASCADE"))
