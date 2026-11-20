@@ -57,7 +57,7 @@ class SerieRepository:
             select(Sessao)
             .where(Sessao.id == subq)
             .options(
-                selectinload(Sessao.series.and_(Serie.tipo != TipoSerie.aquecimento))
+                selectinload(Sessao.series.and_(Serie.tipo == TipoSerie.valida))
             )
         )
         return self.db.scalars(stmt).first()

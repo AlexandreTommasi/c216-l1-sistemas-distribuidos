@@ -20,9 +20,7 @@ class ExercicioRepository:
         return self.db.get(Exercicio, id)
 
     def buscar_por_nome_normalizado(self, nome: str) -> Exercicio | None:
-        stmt = select(Exercicio).where(
-            func.lower(Exercicio.nome) == nome.strip().lower()
-        )
+        stmt = select(Exercicio).where(func.lower(Exercicio.nome) == nome)
         return self.db.scalars(stmt).first()
 
     def criar(self, dados: ExercicioCreate) -> Exercicio:
