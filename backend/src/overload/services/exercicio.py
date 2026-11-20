@@ -16,7 +16,7 @@ class ExercicioService:
     def buscar(self, id: int) -> Exercicio:
         exercicio = self.repo.buscar_por_id(id)
         if exercicio is None:
-            raise NaoEncontrado()
+            raise NaoEncontrado(f"Exercício {id} não encontrado")
         return exercicio
 
     def criar(self, dados: ExercicioCreate) -> Exercicio:

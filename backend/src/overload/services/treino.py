@@ -16,7 +16,7 @@ class TreinoService:
     def buscar(self, id: int) -> Treino:
         treino = self.repo.buscar_por_id(id)
         if treino is None:
-            raise NaoEncontrado()
+            raise NaoEncontrado(f"Treino {id} não encontrado")
         return treino
 
     def criar(self, dados: TreinoCreate) -> Treino:

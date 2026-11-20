@@ -1,5 +1,6 @@
 class NaoEncontrado(Exception):
-    pass
+    def __init__(self, mensagem: str = "Não encontrado") -> None:
+        super().__init__(mensagem)
 
 
 class Conflito(Exception):
