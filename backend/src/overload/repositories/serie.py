@@ -23,8 +23,9 @@ class SerieRepository:
     def buscar_por_id(self, id: int) -> Serie | None:
         return self.db.get(Serie, id)
 
-    def criar(self, dados: SerieCreate, sessao_id: int) -> Serie:
-        serie = Serie(**dados.model_dump(), sessao_id=sessao_id)
+    def criar(self, dados: SerieCreate, sessao_id: int, ordem: int) -> Serie:
+        dump = dados.model_dump(exclude={"ordem"})
+        serie = Serie(**dump, sessao_id=sessao_id, ordem=ordem)
         self.db.add(serie)
         self.db.commit()
         self.db.refresh(serie)

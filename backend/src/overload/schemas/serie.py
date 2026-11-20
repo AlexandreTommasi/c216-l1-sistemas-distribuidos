@@ -14,7 +14,7 @@ class SerieBase(BaseModel):
 
 
 class SerieCreate(SerieBase):
-    pass
+    ordem: int | None = None  # None = auto-calcula no serviço
 
 
 class SerieUpdate(BaseModel):

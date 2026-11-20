@@ -5,12 +5,17 @@ from sqlalchemy.orm import Session
 
 from overload.database.session import get_db
 from overload.services.exercicio import ExercicioService
+from overload.services.serie import SerieService
 from overload.services.sessao import SessaoService
 from overload.services.treino import TreinoService
 
 
 def get_exercicio_service(db: Session = Depends(get_db)) -> ExercicioService:
     return ExercicioService(db)
+
+
+def get_serie_service(db: Session = Depends(get_db)) -> SerieService:
+    return SerieService(db)
 
 
 def get_sessao_service(db: Session = Depends(get_db)) -> SessaoService:
@@ -22,5 +27,6 @@ def get_treino_service(db: Session = Depends(get_db)) -> TreinoService:
 
 
 ExercicioServiceDep = Annotated[ExercicioService, Depends(get_exercicio_service)]
+SerieServiceDep = Annotated[SerieService, Depends(get_serie_service)]
 SessaoServiceDep = Annotated[SessaoService, Depends(get_sessao_service)]
 TreinoServiceDep = Annotated[TreinoService, Depends(get_treino_service)]
