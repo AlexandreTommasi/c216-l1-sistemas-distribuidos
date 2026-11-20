@@ -14,6 +14,11 @@ from overload.main import app
 def engine():
     url = os.environ.get("TEST_DATABASE_URL")
     if not url:
+        if os.environ.get("CI"):
+            pytest.fail(
+                "TEST_DATABASE_URL não configurada em CI — "
+                "verifique as variáveis de ambiente do workflow"
+            )
         pytest.skip("TEST_DATABASE_URL não configurada — pulando integração")
     return create_engine(url, pool_pre_ping=True)
 

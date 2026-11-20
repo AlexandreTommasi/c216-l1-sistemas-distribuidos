@@ -1,0 +1,87 @@
+name: CI — Backend
+
+on:
+  push:
+    paths:
+      - "backend/**"
+      - ".github/workflows/ci-backend.yml"
+  pull_request:
+    paths:
+      - "backend/**"
+      - ".github/workflows/ci-backend.yml"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: overload_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql+psycopg://test:test@localhost:5432/overload_test
+      TEST_DATABASE_URL: postgresql+psycopg://test:test@localhost:5432/overload_test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Instala Poetry
+        run: pipx install poetry
+
+      - name: Configura Poetry
+        run: poetry config virtualenvs.in-project true
+
+      - name: Cache do virtualenv
+        uses: actions/cache@v4
+        with:
+          path: backend/.venv
+          key: ${{ runner.os }}-venv-${{ hashFiles('backend/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-venv-
+
+      - name: Instala dependências
+        run: poetry install
+
+      - name: Ruff — lint
+        run: poetry run ruff check .
+
+      - name: Ruff — format
+        run: poetry run ruff format --check .
+
+      - name: Alembic — upgrade head
+        run: poetry run alembic upgrade head
+
+      - name: Alembic — check
+        run: poetry run alembic check
+
+      - name: Testes unitários
+        run: poetry run pytest -m unit
+
+      - name: Verifica TEST_DATABASE_URL
+        run: |
+          if [ -z "${TEST_DATABASE_URL}" ]; then
+            echo "::error::TEST_DATABASE_URL não está definida — configure a variável no workflow"
+            exit 1
+          fi
+
+      - name: Testes de integração
+        run: poetry run pytest -m integration
