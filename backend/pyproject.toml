@@ -48,4 +48,8 @@ addopts = "--cov=overload --cov-report=term-missing"
 pythonpath = ["src", "."]
 markers = [
     "unit: unit tests that run without a database",
+    "integration: integration tests that require a live PostgreSQL database",
+]
+filterwarnings = [
+    "ignore::sqlalchemy.exc.SADeprecationWarning",
 ]
