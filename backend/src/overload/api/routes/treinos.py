@@ -21,7 +21,7 @@ def criar_treino(dados: TreinoCreate, svc: TreinoServiceDep) -> TreinoRead:
     return svc.criar(dados)
 
 
-@router.put("/{id}", response_model=TreinoRead)
+@router.patch("/{id}", response_model=TreinoRead)
 def atualizar_treino(id: int, dados: TreinoUpdate, svc: TreinoServiceDep) -> TreinoRead:
     return svc.atualizar(id, dados)
 

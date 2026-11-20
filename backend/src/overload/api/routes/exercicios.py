@@ -25,7 +25,7 @@ def criar_exercicio(dados: ExercicioCreate, svc: ExercicioServiceDep) -> Exercic
     return svc.criar(dados)
 
 
-@router.put("/{id}", response_model=ExercicioRead)
+@router.patch("/{id}", response_model=ExercicioRead)
 def atualizar_exercicio(
     id: int, dados: ExercicioUpdate, svc: ExercicioServiceDep
 ) -> ExercicioRead:

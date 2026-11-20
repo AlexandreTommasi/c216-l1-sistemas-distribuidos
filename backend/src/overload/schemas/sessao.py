@@ -16,7 +16,7 @@ class SessaoBase(BaseModel):
     data: datetime.date
     observacao: str | None = Field(default=None, max_length=280)
 
-    @field_validator("data", mode="before")
+    @field_validator("data")
     @classmethod
     def data_nao_futura(cls, v: datetime.date | None) -> datetime.date | None:
         return _valida_data_nao_futura(v)
@@ -31,7 +31,7 @@ class SessaoUpdate(BaseModel):
     data: datetime.date | None = None
     observacao: str | None = Field(default=None, max_length=280)
 
-    @field_validator("data", mode="before")
+    @field_validator("data")
     @classmethod
     def data_nao_futura(cls, v: datetime.date | None) -> datetime.date | None:
         return _valida_data_nao_futura(v)

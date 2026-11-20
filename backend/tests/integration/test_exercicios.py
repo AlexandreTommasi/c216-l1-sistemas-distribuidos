@@ -58,6 +58,16 @@ def test_409_remover_com_series(client):
     assert r.status_code == 409
 
 
+def test_patch_parcial_preserva_campo_nao_enviado(client):
+    r = client.post("/exercicios", json=_PAYLOAD)
+    id_ = r.json()["id"]
+
+    r = client.patch(f"/exercicios/{id_}", json={"nome": "Supino Inclinado"})
+    assert r.status_code == 200
+    assert r.json()["nome"] == "Supino Inclinado"
+    assert r.json()["grupo_muscular"] == "peito"
+
+
 def test_422_payload_invalido(client):
     r = client.post("/exercicios", json={"nome": "", "grupo_muscular": "invalido"})
     assert r.status_code == 422
