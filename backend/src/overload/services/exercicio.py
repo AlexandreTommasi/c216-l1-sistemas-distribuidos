@@ -1,5 +1,3 @@
-from sqlalchemy.orm import Session
-
 from overload.models.exercicio import Exercicio, GrupoMuscular
 from overload.repositories.exercicio import ExercicioRepository
 from overload.schemas.exercicio import ExercicioCreate, ExercicioUpdate
@@ -7,8 +5,8 @@ from overload.services.errors import Conflito, NaoEncontrado
 
 
 class ExercicioService:
-    def __init__(self, db: Session) -> None:
-        self.repo = ExercicioRepository(db)
+    def __init__(self, repo: ExercicioRepository) -> None:
+        self.repo = repo
 
     def listar(self, grupo: GrupoMuscular | None = None) -> list[Exercicio]:
         return self.repo.listar(grupo)

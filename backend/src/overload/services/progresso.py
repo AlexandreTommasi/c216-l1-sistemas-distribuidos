@@ -1,8 +1,6 @@
 from collections import defaultdict
 from decimal import Decimal
 
-from sqlalchemy.orm import Session
-
 from overload.models.serie import TipoSerie
 from overload.repositories.exercicio import ExercicioRepository
 from overload.repositories.serie import SerieRepository
@@ -19,10 +17,15 @@ from overload.services.errors import NaoEncontrado
 
 
 class ProgressoService:
-    def __init__(self, db: Session) -> None:
-        self.sessao_repo = SessaoRepository(db)
-        self.serie_repo = SerieRepository(db)
-        self.exercicio_repo = ExercicioRepository(db)
+    def __init__(
+        self,
+        sessao_repo: SessaoRepository,
+        serie_repo: SerieRepository,
+        exercicio_repo: ExercicioRepository,
+    ) -> None:
+        self.sessao_repo = sessao_repo
+        self.serie_repo = serie_repo
+        self.exercicio_repo = exercicio_repo
 
     def comparar_sessao(self, sessao_id: int) -> SessaoProgresso:
         sessao = self.sessao_repo.buscar_por_id(sessao_id)

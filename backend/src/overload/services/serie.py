@@ -1,5 +1,3 @@
-from sqlalchemy.orm import Session
-
 from overload.models.serie import Serie
 from overload.repositories.exercicio import ExercicioRepository
 from overload.repositories.serie import SerieRepository
@@ -9,10 +7,15 @@ from overload.services.errors import NaoEncontrado
 
 
 class SerieService:
-    def __init__(self, db: Session) -> None:
-        self.serie_repo = SerieRepository(db)
-        self.sessao_repo = SessaoRepository(db)
-        self.exercicio_repo = ExercicioRepository(db)
+    def __init__(
+        self,
+        serie_repo: SerieRepository,
+        sessao_repo: SessaoRepository,
+        exercicio_repo: ExercicioRepository,
+    ) -> None:
+        self.serie_repo = serie_repo
+        self.sessao_repo = sessao_repo
+        self.exercicio_repo = exercicio_repo
 
     def listar_por_sessao(self, sessao_id: int) -> list[Serie]:
         if self.sessao_repo.buscar_por_id(sessao_id) is None:

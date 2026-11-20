@@ -1,5 +1,3 @@
-from sqlalchemy.orm import Session
-
 from overload.models.sessao import Sessao
 from overload.repositories.sessao import SessaoRepository
 from overload.repositories.treino import TreinoRepository
@@ -8,9 +6,11 @@ from overload.services.errors import Conflito, NaoEncontrado
 
 
 class SessaoService:
-    def __init__(self, db: Session) -> None:
-        self.sessao_repo = SessaoRepository(db)
-        self.treino_repo = TreinoRepository(db)
+    def __init__(
+        self, sessao_repo: SessaoRepository, treino_repo: TreinoRepository
+    ) -> None:
+        self.sessao_repo = sessao_repo
+        self.treino_repo = treino_repo
 
     def listar(self, limite: int = 20, offset: int = 0) -> list[Sessao]:
         return self.sessao_repo.listar(limite, offset)
