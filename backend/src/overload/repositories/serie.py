@@ -1,0 +1,76 @@
+import datetime
+
+from sqlalchemy import select
+from sqlalchemy.orm import Session, joinedload, selectinload
+
+from overload.models.serie import Serie, TipoSerie
+from overload.models.sessao import Sessao
+from overload.schemas.serie import SerieCreate, SerieUpdate
+
+
+class SerieRepository:
+    def __init__(self, db: Session) -> None:
+        self.db = db
+
+    def listar_por_sessao(self, sessao_id: int) -> list[Serie]:
+        stmt = (
+            select(Serie)
+            .where(Serie.sessao_id == sessao_id)
+            .order_by(Serie.ordem)
+        )
+        return list(self.db.scalars(stmt).all())
+
+    def buscar_por_id(self, id: int) -> Serie | None:
+        return self.db.get(Serie, id)
+
+    def criar(self, dados: SerieCreate, sessao_id: int) -> Serie:
+        serie = Serie(**dados.model_dump(), sessao_id=sessao_id)
+        self.db.add(serie)
+        self.db.commit()
+        self.db.refresh(serie)
+        return serie
+
+    def atualizar(self, serie: Serie, dados: SerieUpdate) -> Serie:
+        for campo, valor in dados.model_dump(exclude_unset=True).items():
+            setattr(serie, campo, valor)
+        self.db.commit()
+        self.db.refresh(serie)
+        return serie
+
+    def remover(self, serie: Serie) -> None:
+        self.db.delete(serie)
+        self.db.commit()
+
+    def buscar_sessao_anterior(
+        self, exercicio_id: int, data_atual: datetime.date
+    ) -> Sessao | None:
+        subq = (
+            select(Serie.sessao_id)
+            .join(Sessao, Sessao.id == Serie.sessao_id)
+            .where(Serie.exercicio_id == exercicio_id)
+            .where(Sessao.data < data_atual)
+            .order_by(Sessao.data.desc())
+            .limit(1)
+            .scalar_subquery()
+        )
+        stmt = (
+            select(Sessao)
+            .where(Sessao.id == subq)
+            .options(
+                selectinload(Sessao.series.and_(Serie.tipo != TipoSerie.aquecimento))
+            )
+        )
+        return self.db.scalars(stmt).first()
+
+    def buscar_recorde(self, exercicio_id: int) -> Serie | None:
+        # exclui preparatorias tambem: recorde pessoal conta apenas sets validos
+        stmt = (
+            select(Serie)
+            .join(Sessao, Sessao.id == Serie.sessao_id)
+            .where(Serie.exercicio_id == exercicio_id)
+            .where(Serie.tipo == TipoSerie.valida)
+            .options(joinedload(Serie.sessao))
+            .order_by(Serie.carga_kg.desc())
+            .limit(1)
+        )
+        return self.db.scalars(stmt).first()
