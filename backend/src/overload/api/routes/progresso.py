@@ -12,7 +12,5 @@ def comparar_sessao(id: int, svc: ProgressoServiceDep) -> SessaoProgresso:
 
 
 @router.get("/exercicios/{id}/historico", response_model=list[PontoHistorico])
-def historico_exercicio(
-    id: int, svc: ProgressoServiceDep
-) -> list[PontoHistorico]:
+def historico_exercicio(id: int, svc: ProgressoServiceDep) -> list[PontoHistorico]:
     return svc.historico_exercicio(id)

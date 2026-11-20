@@ -13,11 +13,7 @@ class SerieRepository:
         self.db = db
 
     def listar_por_sessao(self, sessao_id: int) -> list[Serie]:
-        stmt = (
-            select(Serie)
-            .where(Serie.sessao_id == sessao_id)
-            .order_by(Serie.ordem)
-        )
+        stmt = select(Serie).where(Serie.sessao_id == sessao_id).order_by(Serie.ordem)
         return list(self.db.scalars(stmt).all())
 
     def buscar_por_id(self, id: int) -> Serie | None:
@@ -57,9 +53,7 @@ class SerieRepository:
         stmt = (
             select(Sessao)
             .where(Sessao.id == subq)
-            .options(
-                selectinload(Sessao.series.and_(Serie.tipo == TipoSerie.valida))
-            )
+            .options(selectinload(Sessao.series.and_(Serie.tipo == TipoSerie.valida)))
         )
         return self.db.scalars(stmt).first()
 

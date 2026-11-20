@@ -38,7 +38,5 @@ class ExercicioService:
         exercicio = self.buscar(id)
         total = self.repo.contar_series(id)
         if total > 0:
-            raise Conflito(
-                f"Exercício possui {total} série(s) e não pode ser removido"
-            )
+            raise Conflito(f"Exercício possui {total} série(s) e não pode ser removido")
         self.repo.remover(exercicio)

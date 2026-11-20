@@ -42,7 +42,9 @@ class ExercicioRepository:
         self.db.commit()
 
     def contar_series(self, exercicio_id: int) -> int:
-        stmt = select(func.count()).select_from(Serie).where(
-            Serie.exercicio_id == exercicio_id
+        stmt = (
+            select(func.count())
+            .select_from(Serie)
+            .where(Serie.exercicio_id == exercicio_id)
         )
         return self.db.scalar(stmt) or 0

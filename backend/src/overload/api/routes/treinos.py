@@ -22,9 +22,7 @@ def criar_treino(dados: TreinoCreate, svc: TreinoServiceDep) -> TreinoRead:
 
 
 @router.put("/{id}", response_model=TreinoRead)
-def atualizar_treino(
-    id: int, dados: TreinoUpdate, svc: TreinoServiceDep
-) -> TreinoRead:
+def atualizar_treino(id: int, dados: TreinoUpdate, svc: TreinoServiceDep) -> TreinoRead:
     return svc.atualizar(id, dados)
 
 

@@ -58,9 +58,9 @@ def test_409_sessao_duplicada(client):
 
 def test_delete_cascata_series(client, db):
     t_id, ex_id = _cria_treino_e_exercicio(client)
-    s_id = client.post(
-        "/sessoes", json={"treino_id": t_id, "data": _DATA1}
-    ).json()["id"]
+    s_id = client.post("/sessoes", json={"treino_id": t_id, "data": _DATA1}).json()[
+        "id"
+    ]
     serie_id = client.post(
         f"/sessoes/{s_id}/series",
         json={"exercicio_id": ex_id, "carga_kg": 60, "repeticoes": 10},
@@ -77,9 +77,9 @@ def test_delete_cascata_series(client, db):
 
 def test_detalhe_traz_series(client):
     t_id, ex_id = _cria_treino_e_exercicio(client)
-    s_id = client.post(
-        "/sessoes", json={"treino_id": t_id, "data": _DATA1}
-    ).json()["id"]
+    s_id = client.post("/sessoes", json={"treino_id": t_id, "data": _DATA1}).json()[
+        "id"
+    ]
 
     for _ in range(2):
         client.post(

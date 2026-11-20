@@ -44,9 +44,7 @@ class SerieService:
         serie = self.buscar(id)
         if dados.exercicio_id is not None:
             if self.exercicio_repo.buscar_por_id(dados.exercicio_id) is None:
-                raise NaoEncontrado(
-                    f"Exercício {dados.exercicio_id} não encontrado"
-                )
+                raise NaoEncontrado(f"Exercício {dados.exercicio_id} não encontrado")
         return self.serie_repo.atualizar(serie, dados)
 
     def remover(self, id: int) -> None:

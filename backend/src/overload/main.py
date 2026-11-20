@@ -14,9 +14,7 @@ app = FastAPI(
 
 
 @app.exception_handler(NaoEncontrado)
-async def nao_encontrado_handler(
-    request: Request, exc: NaoEncontrado
-) -> JSONResponse:
+async def nao_encontrado_handler(request: Request, exc: NaoEncontrado) -> JSONResponse:
     return JSONResponse(status_code=404, content={"detail": str(exc)})
 
 

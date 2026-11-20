@@ -12,9 +12,7 @@ def _setup_base(client):
 
 
 def _cria_sessao_com_serie(client, t_id, ex_id, data, carga, tipo="valida"):
-    s_id = client.post(
-        "/sessoes", json={"treino_id": t_id, "data": data}
-    ).json()["id"]
+    s_id = client.post("/sessoes", json={"treino_id": t_id, "data": data}).json()["id"]
     client.post(
         f"/sessoes/{s_id}/series",
         json={"exercicio_id": ex_id, "carga_kg": carga, "repeticoes": 10, "tipo": tipo},

@@ -31,9 +31,7 @@ def criar_sessao(dados: SessaoCreate, svc: SessaoServiceDep) -> SessaoRead:
 
 
 @router.patch("/{id}", response_model=SessaoRead)
-def atualizar_sessao(
-    id: int, dados: SessaoUpdate, svc: SessaoServiceDep
-) -> SessaoRead:
+def atualizar_sessao(id: int, dados: SessaoUpdate, svc: SessaoServiceDep) -> SessaoRead:
     return svc.atualizar(id, dados)
 
 

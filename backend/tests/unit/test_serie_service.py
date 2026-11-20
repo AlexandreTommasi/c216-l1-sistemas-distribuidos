@@ -25,9 +25,7 @@ def _build():
     serie_repo = FakeSerieRepository()
     sessao_repo = FakeSessaoRepository(serie_repo=serie_repo)
     exercicio_repo = FakeExercicioRepository()
-    sessao_repo._registrar(
-        SimpleNamespace(id=1, data=_DATA, treino_id=1, series=[])
-    )
+    sessao_repo._registrar(SimpleNamespace(id=1, data=_DATA, treino_id=1, series=[]))
     exercicio_repo.criar(
         ExercicioCreate(nome="Supino", grupo_muscular=GrupoMuscular.peito)
     )
@@ -45,9 +43,7 @@ def test_criar_sessao_inexistente_levanta_nao_encontrado():
 def test_criar_exercicio_inexistente_levanta_nao_encontrado():
     serie_repo = FakeSerieRepository()
     sessao_repo = FakeSessaoRepository(serie_repo=serie_repo)
-    sessao_repo._registrar(
-        SimpleNamespace(id=1, data=_DATA, treino_id=1, series=[])
-    )
+    sessao_repo._registrar(SimpleNamespace(id=1, data=_DATA, treino_id=1, series=[]))
     svc = SerieService(serie_repo, sessao_repo, FakeExercicioRepository())
     with pytest.raises(NaoEncontrado):
         svc.criar(1, SerieCreate(exercicio_id=99, carga_kg=_CARGA, repeticoes=10))

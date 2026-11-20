@@ -11,16 +11,12 @@ router = APIRouter(tags=["Series"])
     response_model=SerieRead,
     status_code=status.HTTP_201_CREATED,
 )
-def criar_serie(
-    sessao_id: int, dados: SerieCreate, svc: SerieServiceDep
-) -> SerieRead:
+def criar_serie(sessao_id: int, dados: SerieCreate, svc: SerieServiceDep) -> SerieRead:
     return svc.criar(sessao_id, dados)
 
 
 @router.patch("/series/{id}", response_model=SerieRead)
-def atualizar_serie(
-    id: int, dados: SerieUpdate, svc: SerieServiceDep
-) -> SerieRead:
+def atualizar_serie(id: int, dados: SerieUpdate, svc: SerieServiceDep) -> SerieRead:
     return svc.atualizar(id, dados)
 
 
