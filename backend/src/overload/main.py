@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from overload.api.routes import exercicios, health, series, sessoes, treinos
+from overload.api.routes import exercicios, health, progresso, series, sessoes, treinos
 from overload.core.config import get_settings
 from overload.services.errors import Conflito, NaoEncontrado
 
@@ -38,3 +38,4 @@ app.include_router(exercicios.router)
 app.include_router(treinos.router)
 app.include_router(sessoes.router)
 app.include_router(series.router)
+app.include_router(progresso.router)

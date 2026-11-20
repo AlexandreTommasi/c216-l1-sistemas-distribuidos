@@ -1,6 +1,6 @@
 import datetime
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from overload.models.serie import Serie, TipoSerie
@@ -62,6 +62,21 @@ class SerieRepository:
             )
         )
         return self.db.scalars(stmt).first()
+
+    def historico_por_exercicio(self, exercicio_id: int) -> list:
+        stmt = (
+            select(
+                Sessao.data,
+                func.max(Serie.carga_kg).label("carga_maxima_kg"),
+                func.sum(Serie.carga_kg * Serie.repeticoes).label("volume_kg"),
+            )
+            .join(Sessao, Sessao.id == Serie.sessao_id)
+            .where(Serie.exercicio_id == exercicio_id)
+            .where(Serie.tipo == TipoSerie.valida)
+            .group_by(Sessao.data)
+            .order_by(Sessao.data.asc())
+        )
+        return list(self.db.execute(stmt).all())
 
     def buscar_recorde(self, exercicio_id: int) -> Serie | None:
         # exclui preparatorias tambem: recorde pessoal conta apenas sets validos
