@@ -4,7 +4,8 @@ APP    := overload.main:app
 HOST   := 127.0.0.1
 PORT   := 8000
 
-.PHONY: help install update run lint format check clean
+.PHONY: help install update run lint format check clean \
+        front-install front-dev front-build front-lint front-format
 
 help:
 	@echo ------------------------------------------
@@ -21,6 +22,13 @@ help:
 	@echo   lint      Verifica o codigo com ruff check
 	@echo   format    Formata o codigo com ruff format
 	@echo   check     Formata e depois verifica o codigo
+	@echo ------------------------------------------
+	@echo [Frontend]
+	@echo   front-install   Instala as dependencias do frontend
+	@echo   front-dev       Sobe o servidor de dev do Vite
+	@echo   front-build     Gera o bundle de producao em dist/
+	@echo   front-lint      Verifica o frontend com biome lint
+	@echo   front-format    Formata o frontend com biome format
 	@echo ------------------------------------------
 	@echo [Limpeza]
 	@echo   clean     Remove __pycache__ .pytest_cache e .ruff_cache
@@ -45,3 +53,18 @@ check: format lint
 
 clean:
 	@$(RUN) python -c "import shutil, pathlib; [shutil.rmtree(p, ignore_errors=True) for p in pathlib.Path('.').rglob('__pycache__')]; shutil.rmtree('.pytest_cache', ignore_errors=True); shutil.rmtree('.ruff_cache', ignore_errors=True)"
+
+front-install:
+	npm --prefix frontend install
+
+front-dev:
+	npm --prefix frontend run dev
+
+front-build:
+	npm --prefix frontend run build
+
+front-lint:
+	npm --prefix frontend run lint
+
+front-format:
+	npm --prefix frontend run format
