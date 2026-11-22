@@ -5,7 +5,8 @@ HOST   := 127.0.0.1
 PORT   := 8000
 
 .PHONY: help install update run lint format check clean \
-        front-install front-dev front-build front-lint front-format front-test
+        front-install front-dev front-build front-lint front-format front-test \
+        build up down down-volumes logs ps migrate
 
 help:
 	@echo ------------------------------------------
@@ -30,6 +31,15 @@ help:
 	@echo   front-lint      Verifica o frontend com biome lint
 	@echo   front-format    Formata o frontend com biome format
 	@echo   front-test      Executa os testes do frontend uma vez
+	@echo ------------------------------------------
+	@echo [Docker]
+	@echo   build        Constroi as imagens Docker
+	@echo   up           Sobe todos os servicos em background
+	@echo   down         Para e remove os conteineres, preserva o volume
+	@echo   down-volumes Para e remove os conteineres e o volume de dados
+	@echo   logs         Acompanha os logs do backend
+	@echo   ps           Lista os conteineres e seus estados
+	@echo   migrate      Executa as migrations manualmente
 	@echo ------------------------------------------
 	@echo [Limpeza]
 	@echo   clean     Remove __pycache__ .pytest_cache e .ruff_cache
@@ -72,3 +82,24 @@ front-format:
 
 front-test:
 	npm --prefix frontend run test:run
+
+build:
+	docker compose build
+
+up:
+	docker compose up -d
+
+down:
+	docker compose down
+
+down-volumes:
+	docker compose down -v
+
+logs:
+	docker compose logs -f backend
+
+ps:
+	docker compose ps
+
+migrate:
+	docker compose run --rm migrate
