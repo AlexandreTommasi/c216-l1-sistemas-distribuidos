@@ -28,9 +28,10 @@ class ProgressoService:
         self.exercicio_repo = exercicio_repo
 
     def comparar_sessao(self, sessao_id: int) -> SessaoProgresso:
-        sessao = self.sessao_repo.buscar_por_id(sessao_id)
-        if sessao is None:
+        par = self.sessao_repo.buscar_por_id(sessao_id)
+        if par is None:
             raise NaoEncontrado(f"Sessão {sessao_id} não encontrada")
+        sessao, _ = par
 
         series_validas = [s for s in sessao.series if s.tipo == TipoSerie.valida]
 

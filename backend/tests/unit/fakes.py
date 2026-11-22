@@ -1,3 +1,4 @@
+from decimal import Decimal
 from types import SimpleNamespace
 
 
@@ -72,17 +73,18 @@ class FakeTreinoRepository:
 
 
 class FakeSessaoRepository:
-    def __init__(self, serie_repo=None):
+    def __init__(self, serie_repo=None, treino_repo=None):
         self._store: dict = {}
         self._next_id = 1
         self._serie_repo = serie_repo
+        self._treino_repo = treino_repo
 
     def _registrar(self, sessao):
         self._store[sessao.id] = sessao
 
     def listar(self, limite=20, offset=0):
         items = list(self._store.values())
-        return items[offset : offset + limite]
+        return [(s, Decimal(0)) for s in items[offset : offset + limite]]
 
     def buscar_por_id(self, id):
         sessao = self._store.get(id)
@@ -90,7 +92,7 @@ class FakeSessaoRepository:
             return None
         if self._serie_repo is not None:
             sessao.series = self._serie_repo.listar_por_sessao(id)
-        return sessao
+        return (sessao, Decimal(0))
 
     def buscar_por_treino_e_data(self, treino_id, data):
         for s in self._store.values():
@@ -99,13 +101,18 @@ class FakeSessaoRepository:
         return None
 
     def criar(self, dados):
+        treino = SimpleNamespace(nome="Treino Fake")
+        if self._treino_repo is not None:
+            t = self._treino_repo.buscar_por_id(dados.treino_id)
+            if t is not None:
+                treino = t
         obj = SimpleNamespace(
             id=self._next_id,
             treino_id=dados.treino_id,
             data=dados.data,
             observacao=getattr(dados, "observacao", None),
             series=[],
-            treino=None,
+            treino=treino,
         )
         self._store[self._next_id] = obj
         self._next_id += 1

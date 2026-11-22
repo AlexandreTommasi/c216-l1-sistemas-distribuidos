@@ -23,9 +23,10 @@ class SerieService:
         return self.serie_repo.listar_por_sessao(sessao_id)
 
     def criar(self, sessao_id: int, dados: SerieCreate) -> Serie:
-        sessao = self.sessao_repo.buscar_por_id(sessao_id)
-        if sessao is None:
+        par = self.sessao_repo.buscar_por_id(sessao_id)
+        if par is None:
             raise NaoEncontrado(f"Sessão {sessao_id} não encontrada")
+        sessao, _ = par
         if self.exercicio_repo.buscar_por_id(dados.exercicio_id) is None:
             raise NaoEncontrado(f"Exercício {dados.exercicio_id} não encontrado")
         if dados.ordem is not None:

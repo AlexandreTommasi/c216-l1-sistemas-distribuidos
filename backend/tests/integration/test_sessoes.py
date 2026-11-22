@@ -75,6 +75,57 @@ def test_delete_cascata_series(client, db):
     assert db.get(Serie, serie_id) is None
 
 
+def test_volume_total_kg_soma_somente_series_validas(client):
+    t_id, ex_id = _cria_treino_e_exercicio(client)
+    s_id = client.post("/sessoes", json={"treino_id": t_id, "data": _DATA1}).json()[
+        "id"
+    ]
+
+    # 2 séries válidas: 40 kg × 10 = 400 cada → 800 total
+    for _ in range(2):
+        client.post(
+            f"/sessoes/{s_id}/series",
+            json={
+                "exercicio_id": ex_id,
+                "carga_kg": 40,
+                "repeticoes": 10,
+                "tipo": "valida",
+            },
+        )
+    # 1 série de aquecimento: 20 kg × 15 = 300 (não deve contar)
+    client.post(
+        f"/sessoes/{s_id}/series",
+        json={
+            "exercicio_id": ex_id,
+            "carga_kg": 20,
+            "repeticoes": 15,
+            "tipo": "aquecimento",
+        },
+    )
+
+    r = client.get("/sessoes")
+    assert r.status_code == 200
+    sessao = next(s for s in r.json() if s["id"] == s_id)
+    from decimal import Decimal
+
+    assert Decimal(str(sessao["volume_total_kg"])) == Decimal("800.000")
+
+
+def test_sessao_sem_series_volume_zero(client):
+    t_id, _ = _cria_treino_e_exercicio(client)
+    s_id = client.post("/sessoes", json={"treino_id": t_id, "data": _DATA2}).json()[
+        "id"
+    ]
+
+    r = client.get("/sessoes")
+    assert r.status_code == 200
+    sessao = next(s for s in r.json() if s["id"] == s_id)
+    assert sessao["volume_total_kg"] is not None
+    from decimal import Decimal
+
+    assert Decimal(str(sessao["volume_total_kg"])) == Decimal(0)
+
+
 def test_detalhe_traz_series(client):
     t_id, ex_id = _cria_treino_e_exercicio(client)
     s_id = client.post("/sessoes", json={"treino_id": t_id, "data": _DATA1}).json()[
