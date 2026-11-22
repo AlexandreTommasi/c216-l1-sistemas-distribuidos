@@ -5,7 +5,7 @@ HOST   := 127.0.0.1
 PORT   := 8000
 
 .PHONY: help install update run lint format check clean \
-        front-install front-dev front-build front-lint front-format
+        front-install front-dev front-build front-lint front-format front-test
 
 help:
 	@echo ------------------------------------------
@@ -29,6 +29,7 @@ help:
 	@echo   front-build     Gera o bundle de producao em dist/
 	@echo   front-lint      Verifica o frontend com biome lint
 	@echo   front-format    Formata o frontend com biome format
+	@echo   front-test      Executa os testes do frontend uma vez
 	@echo ------------------------------------------
 	@echo [Limpeza]
 	@echo   clean     Remove __pycache__ .pytest_cache e .ruff_cache
@@ -68,3 +69,6 @@ front-lint:
 
 front-format:
 	npm --prefix frontend run format
+
+front-test:
+	npm --prefix frontend run test:run

@@ -81,8 +81,8 @@ export default function SerieForm({ exercicios, onSalvar }) {
             <input
               id="serie-carga"
               type="number"
-              min="0.1"
-              step="0.5"
+              min="0.25"
+              step="any"
               value={cargaKg}
               onChange={(e) => setCargaKg(e.target.value)}
               required
