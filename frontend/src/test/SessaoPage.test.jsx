@@ -27,7 +27,6 @@ const SESSAO_VAZIA = {
   data: '2024-01-10',
   series: [],
   treino_id: 1,
-  volume_total_kg: '0',
 };
 
 describe('SessaoPage', () => {
@@ -63,7 +62,6 @@ describe('SessaoPage', () => {
       series: [
         { id: 10, exercicio_id: 1, carga_kg: '80', repeticoes: 10, tipo: 'valida', ordem: 1 },
       ],
-      volume_total_kg: '800',
     });
     compararSessao.mockResolvedValueOnce(COMPARACAO);
     listarExercicios.mockResolvedValueOnce(EXERCICIOS);
@@ -95,7 +93,6 @@ describe('SessaoPage', () => {
       series: [
         { id: 11, exercicio_id: 1, carga_kg: '1.25', repeticoes: 8, tipo: 'valida', ordem: 1 },
       ],
-      volume_total_kg: '10',
     });
     compararSessao.mockResolvedValueOnce(COMPARACAO);
     listarExercicios.mockResolvedValueOnce(EXERCICIOS);

@@ -50,6 +50,28 @@ describe('HistoricoPage', () => {
     await waitFor(() => expect(listarSessoes).toHaveBeenCalledTimes(2));
   });
 
+  it('exibe botao carregar mais quando ha 20 sessoes e oculta quando ha menos', async () => {
+    const sessoes20 = Array.from({ length: 20 }, (_, i) => ({
+      id: i + 1,
+      treino_nome: 'Push',
+      data: `2024-01-${String(i + 1).padStart(2, '0')}`,
+    }));
+    listarSessoes.mockResolvedValueOnce(sessoes20);
+    renderPage();
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Carregar mais' })).toBeInTheDocument(),
+    );
+
+    listarSessoes.mockResolvedValueOnce([]);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole('button', { name: 'Carregar mais' }));
+
+    await waitFor(() =>
+      expect(screen.queryByRole('button', { name: 'Carregar mais' })).not.toBeInTheDocument(),
+    );
+    expect(listarSessoes).toHaveBeenCalledTimes(2);
+  });
+
   it('exibe texto de orientação quando a lista está vazia', async () => {
     listarSessoes.mockResolvedValue([]);
     renderPage();

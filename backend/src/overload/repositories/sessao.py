@@ -1,51 +1,36 @@
 import datetime
-from decimal import Decimal
 
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload, selectinload
 
-from overload.models.serie import Serie, TipoSerie
 from overload.models.sessao import Sessao
 from overload.schemas.sessao import SessaoCreate, SessaoUpdate
-
-
-def _vol_sq():
-    """Subconsulta escalar: soma de carga_kg * repeticoes das séries válidas."""
-    return (
-        select(func.coalesce(func.sum(Serie.carga_kg * Serie.repeticoes), 0))
-        .where(Serie.sessao_id == Sessao.id, Serie.tipo == TipoSerie.valida)
-        .correlate(Sessao)
-        .scalar_subquery()
-    )
 
 
 class SessaoRepository:
     def __init__(self, db: Session) -> None:
         self.db = db
 
-    def listar(self, limite: int = 20, offset: int = 0) -> list[tuple[Sessao, Decimal]]:
-        vol = _vol_sq()
+    def listar(self, limite: int = 20, offset: int = 0) -> list[Sessao]:
         stmt = (
-            select(Sessao, vol.label("volume_total_kg"))
+            select(Sessao)
             .options(joinedload(Sessao.treino))
             .order_by(Sessao.data.desc())
             .limit(limite)
             .offset(offset)
         )
-        return list(self.db.execute(stmt).unique().all())
+        return list(self.db.scalars(stmt).unique().all())
 
-    def buscar_por_id(self, id: int) -> tuple[Sessao, Decimal] | None:
-        vol = _vol_sq()
+    def buscar_por_id(self, id: int) -> Sessao | None:
         stmt = (
-            select(Sessao, vol.label("volume_total_kg"))
+            select(Sessao)
             .where(Sessao.id == id)
             .options(
                 joinedload(Sessao.treino),
                 selectinload(Sessao.series),
             )
         )
-        row = self.db.execute(stmt).unique().first()
-        return tuple(row) if row is not None else None  # type: ignore[return-value]
+        return self.db.scalars(stmt).unique().first()
 
     def buscar_por_treino_e_data(
         self, treino_id: int, data: datetime.date

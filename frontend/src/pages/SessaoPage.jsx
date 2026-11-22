@@ -80,19 +80,19 @@ export default function SessaoPage() {
 
   const exercicioIds = [...new Set((sessao?.series ?? []).map((s) => s.exercicio_id))];
 
+  const seriesValidas = (sessao?.series ?? []).filter((s) => s.tipo === 'valida');
+  const numExercicios = new Set(seriesValidas.map((s) => s.exercicio_id)).size;
+  const numSeries = seriesValidas.length;
+
   return (
     <div>
       <div className="mb-6">
         <h1 className="text-xl font-bold">{sessao?.treino_nome}</h1>
         <p className="text-zinc-400 text-sm">{sessao?.data}</p>
-        {progresso && (
-          <p className="text-zinc-400 text-sm mt-1">
-            Volume:{' '}
-            <span className="text-zinc-100 font-medium">
-              {Number.parseFloat(progresso.volume_total_kg).toFixed(1)} kg
-            </span>
-          </p>
-        )}
+        <p className="text-zinc-400 text-sm mt-1">
+          {numExercicios} {numExercicios === 1 ? 'exercício' : 'exercícios'} ·{' '}
+          {numSeries} {numSeries === 1 ? 'série' : 'séries'}
+        </p>
       </div>
 
       {exercicioIds.length === 0 && (

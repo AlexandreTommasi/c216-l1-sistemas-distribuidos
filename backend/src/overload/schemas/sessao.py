@@ -1,5 +1,4 @@
 import datetime
-from decimal import Decimal
 
 from pydantic import AliasPath, BaseModel, ConfigDict, Field, field_validator
 
@@ -46,7 +45,6 @@ class SessaoRead(BaseModel):
     data: datetime.date
     observacao: str | None = None
     treino_nome: str = Field(validation_alias=AliasPath("treino", "nome"))
-    volume_total_kg: Decimal = Decimal(0)
 
 
 class SessaoDetalhe(SessaoRead):

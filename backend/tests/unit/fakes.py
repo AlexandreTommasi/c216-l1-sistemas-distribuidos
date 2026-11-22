@@ -1,4 +1,3 @@
-from decimal import Decimal
 from types import SimpleNamespace
 
 
@@ -84,7 +83,7 @@ class FakeSessaoRepository:
 
     def listar(self, limite=20, offset=0):
         items = list(self._store.values())
-        return [(s, Decimal(0)) for s in items[offset : offset + limite]]
+        return items[offset : offset + limite]
 
     def buscar_por_id(self, id):
         sessao = self._store.get(id)
@@ -92,7 +91,7 @@ class FakeSessaoRepository:
             return None
         if self._serie_repo is not None:
             sessao.series = self._serie_repo.listar_por_sessao(id)
-        return (sessao, Decimal(0))
+        return sessao
 
     def buscar_por_treino_e_data(self, treino_id, data):
         for s in self._store.values():

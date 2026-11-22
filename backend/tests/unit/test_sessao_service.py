@@ -1,9 +1,8 @@
 import datetime
-from decimal import Decimal
 
 import pytest
 
-from overload.schemas.sessao import SessaoCreate, SessaoRead, SessaoUpdate
+from overload.schemas.sessao import SessaoCreate, SessaoUpdate
 from overload.schemas.treino import TreinoCreate
 from overload.services.errors import Conflito, NaoEncontrado
 from overload.services.sessao import SessaoService
@@ -64,34 +63,3 @@ def test_remover_sessao(svc):
     svc.remover(s.id)
     with pytest.raises(NaoEncontrado):
         svc.buscar(s.id)
-
-
-def test_listar_devolve_sessao_read_com_volume_total_kg():
-    treino_repo = FakeTreinoRepository()
-    treino_repo.criar(TreinoCreate(nome="Treino B"))
-
-    volume_esperado = Decimal("1500.000")
-    sessao_repo = FakeSessaoRepository(treino_repo=treino_repo)
-
-    # Injeta par (sessao, volume) diretamente, simulando o repositório real
-    from types import SimpleNamespace
-
-    sessao_fake = SimpleNamespace(
-        id=99,
-        treino_id=1,
-        data=DATA1,
-        observacao=None,
-        series=[],
-        treino=SimpleNamespace(nome="Treino B"),
-    )
-    sessao_repo._store[99] = sessao_fake
-    sessao_repo.listar = lambda limite=20, offset=0: [(sessao_fake, volume_esperado)]
-
-    svc = SessaoService(sessao_repo, treino_repo)
-    resultado = svc.listar()
-
-    assert len(resultado) == 1
-    r = resultado[0]
-    assert isinstance(r, SessaoRead)
-    assert r.volume_total_kg == volume_esperado
-    assert r.treino_nome == "Treino B"
