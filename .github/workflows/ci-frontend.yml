@@ -62,7 +62,7 @@ jobs:
 
       - name: Verificar que migrate concluiu com código 0
         run: |
-          CODE=$(docker inspect "$(docker compose ps -q migrate)" --format='{{.State.ExitCode}}')
+          CODE=$(docker inspect "$(docker compose ps -aq migrate)" --format='{{.State.ExitCode}}')
           if [ "$CODE" != "0" ]; then
             echo "ERROR: migrate saiu com código $CODE"
             docker compose logs migrate
