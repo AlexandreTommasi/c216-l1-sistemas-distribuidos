@@ -49,6 +49,13 @@ class FakeTreinoRepository:
     def __init__(self):
         self._store: dict = {}
         self._next_id = 1
+        self._sugestoes: dict = {}
+
+    def _registrar_sugestao(self, treino_id, sugestoes):
+        self._sugestoes[treino_id] = sugestoes
+
+    def buscar_sugestao(self, treino_id):
+        return self._sugestoes.get(treino_id, [])
 
     def listar(self):
         return list(self._store.values())

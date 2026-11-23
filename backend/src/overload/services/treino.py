@@ -1,12 +1,16 @@
 from overload.models.treino import Treino
 from overload.repositories.treino import TreinoRepository
-from overload.schemas.treino import TreinoCreate, TreinoUpdate
+from overload.schemas.treino import ExercicioSugestao, TreinoCreate, TreinoUpdate
 from overload.services.errors import NaoEncontrado
 
 
 class TreinoService:
     def __init__(self, repo: TreinoRepository) -> None:
         self.repo = repo
+
+    def buscar_sugestao(self, id: int) -> list[ExercicioSugestao]:
+        self.buscar(id)
+        return self.repo.buscar_sugestao(id)
 
     def listar(self) -> list[Treino]:
         return self.repo.listar()

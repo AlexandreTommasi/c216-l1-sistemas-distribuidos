@@ -1,7 +1,12 @@
 from fastapi import APIRouter, status
 
 from overload.api.deps import TreinoServiceDep
-from overload.schemas.treino import TreinoCreate, TreinoRead, TreinoUpdate
+from overload.schemas.treino import (
+    ExercicioSugestao,
+    TreinoCreate,
+    TreinoRead,
+    TreinoUpdate,
+)
 
 router = APIRouter(prefix="/treinos", tags=["Treinos"])
 
@@ -9,6 +14,11 @@ router = APIRouter(prefix="/treinos", tags=["Treinos"])
 @router.get("", response_model=list[TreinoRead])
 def listar_treinos(svc: TreinoServiceDep) -> list[TreinoRead]:
     return svc.listar()
+
+
+@router.get("/{id}/sugestao", response_model=list[ExercicioSugestao])
+def buscar_sugestao(id: int, svc: TreinoServiceDep) -> list[ExercicioSugestao]:
+    return svc.buscar_sugestao(id)
 
 
 @router.get("/{id}", response_model=TreinoRead)

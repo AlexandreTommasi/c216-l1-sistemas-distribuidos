@@ -113,7 +113,9 @@ migrate:
 	docker compose run --rm migrate
 
 test-int:
-	@echo "→ Criando banco de testes (overload_test) se necessario..."
-	@$(RUN) python -c "import sqlalchemy as sa; u='postgresql+psycopg://$(_PG_USER):$(_PG_PASS)@127.0.0.1:$(DB_PORT)/postgres'; e=sa.create_engine(u,isolation_level='AUTOCOMMIT'); c=e.connect(); c.execute(sa.text('CREATE DATABASE overload_test')) if not c.execute(sa.text('SELECT 1 FROM pg_database WHERE datname=:n'),{'n':'overload_test'}).fetchone() else None; c.close(); print('overload_test: pronto')"
+	@echo "→ Recriando banco de testes (overload_test)..."
+	@$(RUN) python -c "import sqlalchemy as sa; u='postgresql+psycopg://$(_PG_USER):$(_PG_PASS)@127.0.0.1:$(DB_PORT)/postgres'; e=sa.create_engine(u,isolation_level='AUTOCOMMIT'); c=e.connect(); c.execute(sa.text('DROP DATABASE IF EXISTS overload_test')); c.execute(sa.text('CREATE DATABASE overload_test')); c.close(); print('overload_test: pronto')"
+	@echo "→ Aplicando migrations (alembic upgrade head)..."
+	@cd backend && DATABASE_URL=$(_TEST_URL) poetry run alembic upgrade head
 	DATABASE_URL=$(_TEST_URL) TEST_DATABASE_URL=$(_TEST_URL) \
 		$(RUN) pytest -m integration -v

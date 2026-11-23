@@ -1,4 +1,19 @@
+from decimal import Decimal
+
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+from overload.models.exercicio import GrupoMuscular
+
+
+class ExercicioSugestao(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    exercicio_id: int
+    nome: str
+    grupo_muscular: GrupoMuscular
+    carga_kg: Decimal
+    repeticoes: int
+    series_validas: int
 
 
 class TreinoBase(BaseModel):
