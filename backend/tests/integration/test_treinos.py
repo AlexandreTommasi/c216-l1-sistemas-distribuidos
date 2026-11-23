@@ -78,6 +78,35 @@ def test_sugestao_treino_com_historico(client):
     assert dados[0]["series_validas"] == 2
 
 
+def test_sugestao_sessao_vazia_usa_sessao_anterior_com_series(client):
+    """Sessão mais recente vazia: sugestão vem da sessão anterior com séries válidas."""
+    ex_id = client.post(
+        "/exercicios", json={"nome": "Supino Seq Int", "grupo_muscular": "peito"}
+    ).json()["id"]
+    t_id = client.post("/treinos", json={"nome": "Treino Seq Hist"}).json()["id"]
+    s1_id = client.post(
+        "/sessoes", json={"treino_id": t_id, "data": "2024-01-10"}
+    ).json()["id"]
+    client.post(
+        f"/sessoes/{s1_id}/series",
+        json={
+            "exercicio_id": ex_id,
+            "carga_kg": 80,
+            "repeticoes": 10,
+            "tipo": "valida",
+        },
+    )
+    # Sessão 2 mais recente, sem séries
+    client.post("/sessoes", json={"treino_id": t_id, "data": "2024-01-11"})
+
+    r = client.get(f"/treinos/{t_id}/sugestao")
+    assert r.status_code == 200
+    dados = r.json()
+    assert len(dados) == 1
+    assert float(dados[0]["carga_kg"]) == 80.0
+    assert dados[0]["repeticoes"] == 10
+
+
 def test_sugestao_ultima_sessao_so_aquecimento_devolve_vazio(client):
     ex_id = client.post(
         "/exercicios", json={"nome": "Supino Aquec Int", "grupo_muscular": "peito"}

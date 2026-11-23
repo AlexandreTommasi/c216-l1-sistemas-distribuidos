@@ -10,7 +10,7 @@ _PG_PASS := $(or $(POSTGRES_PASSWORD),postgres)
 _TEST_URL  = postgresql+psycopg://$(_PG_USER):$(_PG_PASS)@127.0.0.1:$(DB_PORT)/overload_test
 
 .PHONY: help install update run lint format check clean \
-        front-install front-dev front-build front-lint front-format front-test \
+        front-install front-dev front-build front-lint front-format front-test e2e \
         build up down down-volumes logs ps migrate test-int
 
 help:
@@ -36,6 +36,7 @@ help:
 	@echo   front-lint      Verifica o frontend com biome lint
 	@echo   front-format    Formata o frontend com biome format
 	@echo   front-test      Executa os testes do frontend uma vez
+	@echo   e2e             Executa os testes E2E via Playwright (stack Compose deve estar no ar)
 	@echo ------------------------------------------
 	@echo [Docker]
 	@echo   build        Constroi as imagens Docker
@@ -90,6 +91,9 @@ front-format:
 
 front-test:
 	npm --prefix frontend run test:run
+
+e2e:
+	npm --prefix frontend run e2e
 
 build:
 	docker compose build

@@ -7,7 +7,16 @@ import { buscarSessao, compararSessao } from '../services/sessoes.js';
 import { buscarSugestao } from '../services/treinos.js';
 import { cargaPositiva } from '../validation.js';
 
-const GRUPOS = ['peito', 'costas', 'pernas', 'ombros', 'biceps', 'triceps', 'abdomen', 'panturrilha'];
+const GRUPOS = [
+  'peito',
+  'costas',
+  'pernas',
+  'ombros',
+  'biceps',
+  'triceps',
+  'abdomen',
+  'panturrilha',
+];
 const TIPOS = ['valida', 'aquecimento', 'preparatoria'];
 
 export default function SessaoPage() {
@@ -188,7 +197,7 @@ export default function SessaoPage() {
     : [];
 
   const ultimaVez = exercicioAtualId
-    ? sugestoes.find((s) => s.exercicio_id === exercicioAtualId) ?? null
+    ? (sugestoes.find((s) => s.exercicio_id === exercicioAtualId) ?? null)
     : null;
 
   const nomeAtual = exercicioAtualId
@@ -201,8 +210,8 @@ export default function SessaoPage() {
         <h1 className="text-xl font-bold">{sessao?.treino_nome}</h1>
         <p className="text-zinc-400 text-sm">{sessao?.data}</p>
         <p className="text-zinc-400 text-sm mt-1">
-          {numExercicios} {numExercicios === 1 ? 'exercício' : 'exercícios'} ·{' '}
-          {numSeries} {numSeries === 1 ? 'série' : 'séries'}
+          {numExercicios} {numExercicios === 1 ? 'exercício' : 'exercícios'} · {numSeries}{' '}
+          {numSeries === 1 ? 'série' : 'séries'}
         </p>
       </div>
 
@@ -250,9 +259,7 @@ export default function SessaoPage() {
       )}
 
       <div className="bg-zinc-800 rounded-xl p-4">
-        <h3 className="font-semibold text-zinc-100 mb-4">
-          {nomeAtual ?? 'Adicionar exercício'}
-        </h3>
+        <h3 className="font-semibold text-zinc-100 mb-4">{nomeAtual ?? 'Adicionar exercício'}</h3>
 
         {!exercicioAtualId ? (
           <>

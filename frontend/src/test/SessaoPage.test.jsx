@@ -27,7 +27,14 @@ vi.mock('../services/treinos.js', () => ({
 const EXERCICIOS = [{ id: 1, nome: 'Supino', grupo_muscular: 'peito' }];
 const COMPARACAO = { exercicios: [] };
 const SESSAO_VAZIA = { id: 1, treino_nome: 'Peito', data: '2024-01-10', series: [], treino_id: 1 };
-const SERIE_1 = { id: 10, exercicio_id: 1, carga_kg: '80', repeticoes: 10, tipo: 'valida', ordem: 1 };
+const SERIE_1 = {
+  id: 10,
+  exercicio_id: 1,
+  carga_kg: '80',
+  repeticoes: 10,
+  tipo: 'valida',
+  ordem: 1,
+};
 
 function renderPage() {
   return render(
@@ -225,10 +232,7 @@ describe('SessaoPage', () => {
     await user.click(screen.getByRole('button', { name: 'Registrar série' }));
 
     await waitFor(() => expect(criarSerie).toHaveBeenCalledOnce());
-    expect(criarSerie).toHaveBeenCalledWith(
-      1,
-      expect.objectContaining({ exercicio_id: 99 }),
-    );
+    expect(criarSerie).toHaveBeenCalledWith(1, expect.objectContaining({ exercicio_id: 99 }));
   });
 
   it('sessão vazia de treino com histórico mostra os exercícios sugeridos', async () => {

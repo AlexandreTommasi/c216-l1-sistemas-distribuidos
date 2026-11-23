@@ -1,0 +1,90 @@
+name: CI Frontend
+
+on:
+  push:
+    branches: [projeto-final]
+    paths:
+      - 'frontend/**'
+      - 'backend/**'
+      - 'compose.yaml'
+      - '.github/workflows/ci-frontend.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'frontend/**'
+      - 'backend/**'
+      - 'compose.yaml'
+      - '.github/workflows/ci-frontend.yml'
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm run test:run
+      - run: npm run build
+
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Instalar dependências
+        run: npm ci
+        working-directory: frontend
+
+      - name: Instalar Chromium (Playwright)
+        run: npx playwright install --with-deps chromium
+        working-directory: frontend
+
+      - name: Criar .env
+        run: cp .env.example .env
+
+      - name: Subir stack (Compose)
+        run: docker compose up -d --build --wait
+
+      - name: Verificar que migrate concluiu com código 0
+        run: |
+          CODE=$(docker inspect "$(docker compose ps -q migrate)" --format='{{.State.ExitCode}}')
+          if [ "$CODE" != "0" ]; then
+            echo "ERROR: migrate saiu com código $CODE"
+            docker compose logs migrate
+            exit 1
+          fi
+          echo "migrate OK (código $CODE)"
+
+      - name: Executar testes E2E (Playwright)
+        run: npm --prefix frontend run e2e
+
+      - name: Publicar relatório do Playwright
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          retention-days: 7
+
+      - name: Logs do Compose (debug)
+        if: failure()
+        run: docker compose logs db migrate backend frontend
+
+      - name: Parar serviços
+        if: always()
+        run: docker compose down

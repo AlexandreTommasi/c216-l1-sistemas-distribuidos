@@ -12,9 +12,15 @@ class TreinoRepository:
         self.db = db
 
     def buscar_sugestao(self, treino_id: int) -> list[ExercicioSugestao]:
+        sessoes_com_serie = select(Serie.sessao_id).where(
+            Serie.tipo == TipoSerie.valida
+        )
         sessao = self.db.scalar(
             select(Sessao)
-            .where(Sessao.treino_id == treino_id)
+            .where(
+                Sessao.treino_id == treino_id,
+                Sessao.id.in_(sessoes_com_serie),
+            )
             .order_by(Sessao.data.desc())
             .limit(1)
         )
