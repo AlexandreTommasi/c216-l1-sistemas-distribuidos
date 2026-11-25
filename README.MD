@@ -110,14 +110,14 @@ backend/src/overload/
 
 ```
 frontend/src/
-├── pages/               # TreinosPage, NovaSessaoPage, SessaoPage, ExerciciosPage, HistoricoPage
+├── pages/               # HistoricoPage, NovaSessaoPage, SessaoPage, ExerciciosPage, ExercicioPage, TreinosPage
 ├── components/          # ExercicioCard, DeltaBadge, SessaoList, NavBar, ...
 ├── services/            # clientes fetch para cada recurso da API
 ├── validation.js        # regras de validação puras (sem framework)
 └── App.jsx              # configuração de rotas (react-router-dom)
 ```
 
-Não há biblioteca de estado global (Redux, Zustand, etc.). O estado de cada página é local — cada página busca seus próprios dados ao montar. Com quatro páginas e fluxo de dados unidirecional, adicionar uma biblioteca de estado seria complexidade sem benefício.
+Não há biblioteca de estado global (Redux, Zustand, etc.). O estado de cada página é local — cada página busca seus próprios dados ao montar. Com seis telas e fluxo de dados unidirecional, adicionar uma biblioteca de estado seria complexidade sem benefício.
 
 ---
 
@@ -156,7 +156,7 @@ A documentação interativa está disponível em `http://localhost:8000/docs` qu
 
 ## Testes
 
-### Backend — unitários (40 testes)
+### Backend — unitários (41 testes)
 
 ```bash
 cd backend
@@ -167,7 +167,7 @@ Testam a lógica dos serviços de forma isolada, usando repositórios falsos (`t
 
 Não cobrem: consultas SQL, serialização HTTP, comportamento de migrations.
 
-### Backend — integração (29 testes)
+### Backend — integração (30 testes)
 
 ```bash
 make test-int
@@ -177,7 +177,7 @@ O alvo recria o banco `overload_test`, aplica as migrations e roda os testes con
 
 Não cobrem: comportamento do frontend, lógica que depende de estado de sessão.
 
-### Frontend — unitários e comportamento (28 testes)
+### Frontend — unitários e comportamento (29 testes)
 
 ```bash
 make front-test
@@ -269,6 +269,9 @@ Exercícios são uma entidade global e independente — qualquer exercício pode
 
 **A comparação ignora séries de aquecimento e preparatórias.**
 Séries têm um campo `tipo` com três valores: `valida`, `aquecimento`, `preparatoria`. O progresso de sobrecarga é medido pelas séries de trabalho efetivo (`valida`). Incluir aquecimento na comparação produziria deltas enganosos, já que a carga de aquecimento cai antes de cada bloco principal.
+
+**A comparação com a última vez é agregada em SQL, por exercício.**
+A primeira versão carregava a sessão anterior inteira e somava as séries em Python. Como a coleção vinha com as séries de todos os exercícios daquela sessão, um exercício leve era comparado com a carga máxima de um pesado feito no mesmo dia, e tudo aparecia regredindo. Os testes não pegaram porque usavam sessões de um exercício só; os dados de seed, com cinco exercícios por sessão, expuseram o bug. Agora uma subconsulta encontra a última sessão em que aquele exercício teve série válida, e o `max` e o `sum` rodam filtrados por `exercicio_id`. Há um teste unitário e um de integração com dois exercícios na mesma sessão para impedir a regressão.
 
 **A sugestão usa a sessão mais recente que tenha séries válidas, não a mais recente por data.**
 Se o usuário criar uma sessão vazia (data de hoje) e existir uma sessão anterior com séries, a sugestão deve vir da sessão com histórico, não da sessão vazia. A query usa uma subconsulta para filtrar apenas sessões com `Serie.tipo = 'valida'` antes de ordenar por data.
