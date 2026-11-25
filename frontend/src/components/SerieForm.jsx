@@ -17,7 +17,7 @@ export default function SerieForm({ exercicios, onSalvar }) {
     return (
       <p className="text-zinc-400 text-sm">
         Nenhum exercício cadastrado.{' '}
-        <a href="/exercicios" className="text-emerald-400 underline">
+        <a href="/exercicios" className="text-brand underline">
           Cadastre exercícios
         </a>{' '}
         antes de registrar séries.
@@ -51,7 +51,7 @@ export default function SerieForm({ exercicios, onSalvar }) {
   }
 
   return (
-    <div className="bg-zinc-800 rounded-xl p-4">
+    <div className="bg-surface rounded-2xl p-4">
       <h3 className="font-semibold text-zinc-100 mb-4">Adicionar série</h3>
       <form onSubmit={handleSubmit} className="space-y-3">
         <div>
@@ -63,7 +63,7 @@ export default function SerieForm({ exercicios, onSalvar }) {
             value={exercicioId}
             onChange={(e) => setExercicioId(e.target.value)}
             required
-            className="w-full bg-zinc-700 border border-zinc-600 rounded-lg px-3 py-2.5 text-zinc-100 text-sm focus:outline-none focus:border-emerald-500"
+            className="w-full bg-surface-2 border border-line rounded-xl px-3 py-2.5 text-zinc-100 text-sm focus:outline-none focus:border-brand"
           >
             {exercicios.map((ex) => (
               <option key={ex.id} value={ex.id}>
@@ -87,7 +87,7 @@ export default function SerieForm({ exercicios, onSalvar }) {
               onChange={(e) => setCargaKg(e.target.value)}
               required
               placeholder="80"
-              className="w-full bg-zinc-700 border border-zinc-600 rounded-lg px-3 py-2.5 text-zinc-100 text-sm focus:outline-none focus:border-emerald-500"
+              className="w-full bg-surface-2 border border-line rounded-xl px-3 py-2.5 text-zinc-100 text-sm focus:outline-none focus:border-brand"
             />
           </div>
           <div className="flex-1">
@@ -104,7 +104,7 @@ export default function SerieForm({ exercicios, onSalvar }) {
               onChange={(e) => setRepeticoes(e.target.value)}
               required
               placeholder="10"
-              className="w-full bg-zinc-700 border border-zinc-600 rounded-lg px-3 py-2.5 text-zinc-100 text-sm focus:outline-none focus:border-emerald-500"
+              className="w-full bg-surface-2 border border-line rounded-xl px-3 py-2.5 text-zinc-100 text-sm focus:outline-none focus:border-brand"
             />
           </div>
         </div>
@@ -117,7 +117,7 @@ export default function SerieForm({ exercicios, onSalvar }) {
             id="serie-tipo"
             value={tipo}
             onChange={(e) => setTipo(e.target.value)}
-            className="w-full bg-zinc-700 border border-zinc-600 rounded-lg px-3 py-2.5 text-zinc-100 text-sm focus:outline-none focus:border-emerald-500"
+            className="w-full bg-surface-2 border border-line rounded-xl px-3 py-2.5 text-zinc-100 text-sm focus:outline-none focus:border-brand"
           >
             {TIPOS.map((t) => (
               <option key={t} value={t}>
@@ -128,7 +128,7 @@ export default function SerieForm({ exercicios, onSalvar }) {
         </div>
 
         {erro && (
-          <div role="alert" className="bg-red-900/40 border border-red-700 rounded-lg p-2">
+          <div role="alert" className="border border-red-500/30 bg-red-500/10 rounded-xl p-2">
             <p className="text-red-300 text-xs">{erro}</p>
           </div>
         )}
@@ -136,7 +136,7 @@ export default function SerieForm({ exercicios, onSalvar }) {
         <button
           type="submit"
           disabled={salvando}
-          className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-lg text-sm"
+          className="w-full bg-brand hover:bg-brand/90 disabled:opacity-50 disabled:cursor-not-allowed text-ink font-semibold py-3 rounded-xl text-sm"
         >
           {salvando ? 'Salvando...' : 'Registrar série'}
         </button>

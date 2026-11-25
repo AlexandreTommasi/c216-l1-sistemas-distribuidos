@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import ExercicioCard from '../components/ExercicioCard.jsx';
+import { dataLonga, dataRelativa, titulo } from '../lib/formatters.js';
+import { grupo } from '../lib/grupos.js';
 import { criarExercicio, listarExercicios } from '../services/exercicios.js';
 import { criarSerie, removerSerie } from '../services/series.js';
 import { buscarSessao, compararSessao } from '../services/sessoes.js';
@@ -47,6 +49,8 @@ export default function SessaoPage() {
   const [novoGrupo, setNovoGrupo] = useState('peito');
   const [salvandoEx, setSalvandoEx] = useState(false);
   const [erroEx, setErroEx] = useState(null);
+
+  const formRef = useRef(null);
 
   const carregar = useCallback(async () => {
     setCarregando(true);
@@ -102,6 +106,20 @@ export default function SessaoPage() {
       setRepeticoes('');
     }
     setTipo('valida');
+  }
+
+  function handleAdicionarSerie(exId) {
+    handleSelecionarExercicio(exId);
+    const doExercicio = (sessao?.series ?? []).filter((s) => s.exercicio_id === exId);
+    const validas = doExercicio.filter((s) => s.tipo === 'valida');
+    const ultima = validas.at(-1) ?? doExercicio.at(-1);
+    if (ultima) {
+      setCargaKg(String(Number.parseFloat(ultima.carga_kg)));
+      setRepeticoes(String(ultima.repeticoes));
+    }
+    requestAnimationFrame(() =>
+      formRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'center' }),
+    );
   }
 
   async function handleSalvarSerie(e) {
@@ -170,7 +188,7 @@ export default function SessaoPage() {
 
   if (erro) {
     return (
-      <div role="alert" className="bg-red-900/40 border border-red-700 rounded-lg p-4">
+      <div role="alert" className="border border-red-500/30 bg-red-500/10 rounded-xl p-4">
         <p className="text-red-300 mb-2">{erro}</p>
         <button type="button" onClick={carregar} className="text-sm text-red-300 underline">
           Tentar de novo
@@ -201,14 +219,21 @@ export default function SessaoPage() {
     : null;
 
   const nomeAtual = exercicioAtualId
-    ? (exercicios.find((e) => e.id === exercicioAtualId)?.nome ?? `Exercício #${exercicioAtualId}`)
+    ? titulo(
+        exercicios.find((e) => e.id === exercicioAtualId)?.nome ?? `Exercício #${exercicioAtualId}`,
+      )
     : null;
 
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-xl font-bold">{sessao?.treino_nome}</h1>
-        <p className="text-zinc-400 text-sm">{sessao?.data}</p>
+        <h1 className="title-display text-3xl">{sessao?.treino_nome}</h1>
+        <p className="text-zinc-400 text-sm">
+          {sessao?.data && dataLonga(sessao.data)}
+          <span className="ml-2 rounded-full border border-line px-2 py-0.5 text-[11px] text-zinc-500">
+            {sessao?.data && dataRelativa(sessao.data)}
+          </span>
+        </p>
         <p className="text-zinc-400 text-sm mt-1">
           {numExercicios} {numExercicios === 1 ? 'exercício' : 'exercícios'} · {numSeries}{' '}
           {numSeries === 1 ? 'série' : 'séries'}
@@ -216,7 +241,7 @@ export default function SessaoPage() {
       </div>
 
       {erroRemover && (
-        <div role="alert" className="bg-red-900/40 border border-red-700 rounded-lg p-3 mb-4">
+        <div role="alert" className="border border-red-500/30 bg-red-500/10 rounded-xl p-3 mb-4">
           <p className="text-red-300 text-sm">{erroRemover}</p>
         </div>
       )}
@@ -227,7 +252,9 @@ export default function SessaoPage() {
             key={exId}
             series={seriesPorEx[exId]}
             progresso={progPorEx[exId]}
+            grupoMuscular={exercicios.find((e) => e.id === exId)?.grupo_muscular}
             onRemoverSerie={handleRemoverSerie}
+            onAdicionarSerie={() => handleAdicionarSerie(exId)}
           />
         ))}
       </div>
@@ -243,10 +270,10 @@ export default function SessaoPage() {
                 key={sug.exercicio_id}
                 type="button"
                 onClick={() => handleSelecionarExercicio(sug.exercicio_id)}
-                className="w-full text-left bg-zinc-800/60 border border-zinc-700 rounded-xl p-3 hover:border-emerald-500/50 transition-colors"
+                className="w-full text-left bg-surface/60 border border-line rounded-2xl p-3 hover:border-brand/50 transition-colors"
               >
                 <div className="flex justify-between items-center">
-                  <span className="font-medium text-zinc-100">{sug.nome}</span>
+                  <span className="font-medium text-zinc-100">{titulo(sug.nome)}</span>
                   <span className="text-sm text-zinc-400">
                     {Number.parseFloat(sug.carga_kg)} kg × {sug.repeticoes} · {sug.series_validas}{' '}
                     {sug.series_validas === 1 ? 'série' : 'séries'}
@@ -258,8 +285,15 @@ export default function SessaoPage() {
         </div>
       )}
 
-      <div className="bg-zinc-800 rounded-xl p-4">
-        <h3 className="font-semibold text-zinc-100 mb-4">{nomeAtual ?? 'Adicionar exercício'}</h3>
+      <div
+        ref={formRef}
+        className={`rounded-2xl border bg-surface p-4 transition-colors ${
+          exercicioAtualId ? 'border-brand/40' : 'border-line'
+        }`}
+      >
+        <h3 className="title-display mb-4 text-xl text-zinc-100">
+          {nomeAtual ?? 'Adicionar exercício'}
+        </h3>
 
         {!exercicioAtualId ? (
           <>
@@ -276,20 +310,20 @@ export default function SessaoPage() {
                   setCriarAberto(false);
                 }}
                 placeholder="Buscar exercício..."
-                className="w-full bg-zinc-700 border border-zinc-600 rounded-lg px-3 py-2.5 text-zinc-100 text-sm focus:outline-none focus:border-emerald-500"
+                className="w-full bg-surface-2 border border-line rounded-xl px-3 py-2.5 text-zinc-100 text-sm focus:outline-none focus:border-brand"
               />
             </div>
 
             {filtro.trim().length > 0 && (
-              <ul className="mb-3 bg-zinc-700 rounded-lg overflow-hidden border border-zinc-600">
+              <ul className="mb-3 bg-surface-2 rounded-xl overflow-hidden border border-line">
                 {exerciciosFiltrados.map((ex) => (
                   <li key={ex.id}>
                     <button
                       type="button"
                       onClick={() => handleSelecionarExercicio(ex.id)}
-                      className="w-full text-left px-3 py-2.5 text-sm text-zinc-100 hover:bg-zinc-600 transition-colors"
+                      className="w-full text-left px-3 py-2.5 text-sm text-zinc-100 hover:bg-surface-2 transition-colors"
                     >
-                      {ex.nome}
+                      {titulo(ex.nome)}
                     </button>
                   </li>
                 ))}
@@ -303,7 +337,7 @@ export default function SessaoPage() {
                         setFiltro('');
                         setCriarAberto(true);
                       }}
-                      className="text-emerald-400 underline"
+                      className="text-brand underline"
                     >
                       {`Criar "${filtro.trim()}"`}
                     </button>
@@ -324,7 +358,7 @@ export default function SessaoPage() {
                     value={novoNome}
                     onChange={(e) => setNovoNome(e.target.value)}
                     required
-                    className="w-full bg-zinc-700 border border-zinc-600 rounded-lg px-3 py-2.5 text-zinc-100 text-sm focus:outline-none focus:border-emerald-500"
+                    className="w-full bg-surface-2 border border-line rounded-xl px-3 py-2.5 text-zinc-100 text-sm focus:outline-none focus:border-brand"
                   />
                 </div>
                 <div>
@@ -335,18 +369,21 @@ export default function SessaoPage() {
                     id="novo-ex-grupo"
                     value={novoGrupo}
                     onChange={(e) => setNovoGrupo(e.target.value)}
-                    className="w-full bg-zinc-700 border border-zinc-600 rounded-lg px-3 py-2.5 text-zinc-100 text-sm focus:outline-none focus:border-emerald-500"
+                    className="w-full bg-surface-2 border border-line rounded-xl px-3 py-2.5 text-zinc-100 text-sm focus:outline-none focus:border-brand"
                   >
                     {GRUPOS.map((g) => (
                       <option key={g} value={g}>
-                        {g}
+                        {grupo(g).rotulo}
                       </option>
                     ))}
                   </select>
                 </div>
 
                 {erroEx && (
-                  <div role="alert" className="bg-red-900/40 border border-red-700 rounded-lg p-2">
+                  <div
+                    role="alert"
+                    className="border border-red-500/30 bg-red-500/10 rounded-xl p-2"
+                  >
                     <p className="text-red-300 text-xs">{erroEx}</p>
                   </div>
                 )}
@@ -354,7 +391,7 @@ export default function SessaoPage() {
                 <button
                   type="submit"
                   disabled={salvandoEx}
-                  className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-lg text-sm"
+                  className="w-full bg-brand hover:bg-brand/90 disabled:opacity-50 disabled:cursor-not-allowed text-ink font-semibold py-3 rounded-xl text-sm"
                 >
                   {salvandoEx ? 'Salvando...' : 'Criar exercício'}
                 </button>
@@ -405,7 +442,7 @@ export default function SessaoPage() {
                   onChange={(e) => setCargaKg(e.target.value)}
                   required
                   placeholder="80"
-                  className="w-full bg-zinc-700 border border-zinc-600 rounded-lg px-3 py-2.5 text-zinc-100 text-sm focus:outline-none focus:border-emerald-500"
+                  className="w-full bg-surface-2 border border-line rounded-xl px-3 py-2.5 text-zinc-100 text-sm focus:outline-none focus:border-brand"
                 />
               </div>
               <div className="flex-1">
@@ -422,7 +459,7 @@ export default function SessaoPage() {
                   onChange={(e) => setRepeticoes(e.target.value)}
                   required
                   placeholder="10"
-                  className="w-full bg-zinc-700 border border-zinc-600 rounded-lg px-3 py-2.5 text-zinc-100 text-sm focus:outline-none focus:border-emerald-500"
+                  className="w-full bg-surface-2 border border-line rounded-xl px-3 py-2.5 text-zinc-100 text-sm focus:outline-none focus:border-brand"
                 />
               </div>
             </div>
@@ -435,7 +472,7 @@ export default function SessaoPage() {
                 id="add-tipo"
                 value={tipo}
                 onChange={(e) => setTipo(e.target.value)}
-                className="w-full bg-zinc-700 border border-zinc-600 rounded-lg px-3 py-2.5 text-zinc-100 text-sm focus:outline-none focus:border-emerald-500"
+                className="w-full bg-surface-2 border border-line rounded-xl px-3 py-2.5 text-zinc-100 text-sm focus:outline-none focus:border-brand"
               >
                 {TIPOS.map((t) => (
                   <option key={t} value={t}>
@@ -446,7 +483,7 @@ export default function SessaoPage() {
             </div>
 
             {erroSalvar && (
-              <div role="alert" className="bg-red-900/40 border border-red-700 rounded-lg p-2">
+              <div role="alert" className="border border-red-500/30 bg-red-500/10 rounded-xl p-2">
                 <p className="text-red-300 text-xs">{erroSalvar}</p>
               </div>
             )}
@@ -454,7 +491,7 @@ export default function SessaoPage() {
             <button
               type="submit"
               disabled={salvando}
-              className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-lg text-sm"
+              className="w-full bg-brand hover:bg-brand/90 disabled:opacity-50 disabled:cursor-not-allowed text-ink font-semibold py-3 rounded-xl text-sm"
             >
               {salvando ? 'Salvando...' : 'Registrar série'}
             </button>

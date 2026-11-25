@@ -260,4 +260,20 @@ describe('SessaoPage', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     expect(screen.getByPlaceholderText('Buscar exercício...')).toBeInTheDocument();
   });
+
+  it('botão + Série do cartão abre o formulário com a última série do exercício', async () => {
+    buscarSessao.mockResolvedValueOnce({ ...SESSAO_VAZIA, series: [SERIE_1] });
+    compararSessao.mockResolvedValueOnce({
+      exercicios: [{ exercicio_id: 1, nome: 'Supino', status: 'primeira_vez' }],
+    });
+    listarExercicios.mockResolvedValueOnce(EXERCICIOS);
+
+    renderPage();
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole('button', { name: 'Adicionar série em Supino' }));
+
+    expect(await screen.findByLabelText('Carga (kg)')).toHaveValue(80);
+    expect(screen.getByLabelText('Repetições')).toHaveValue(10);
+    expect(screen.getByRole('button', { name: 'Registrar série' })).toBeInTheDocument();
+  });
 });

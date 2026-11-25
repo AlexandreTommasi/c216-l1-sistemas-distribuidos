@@ -51,7 +51,7 @@ export default function ExercicioForm({ exercicio, onSalvo, onCancelar }) {
           required
           maxLength={80}
           placeholder="Supino Reto"
-          className="w-full bg-zinc-700 border border-zinc-600 rounded-lg px-3 py-2.5 text-zinc-100 text-sm focus:outline-none focus:border-emerald-500"
+          className="w-full bg-surface-2 border border-line rounded-xl px-3 py-2.5 text-zinc-100 text-sm focus:outline-none focus:border-brand"
         />
       </div>
       <div>
@@ -62,7 +62,7 @@ export default function ExercicioForm({ exercicio, onSalvo, onCancelar }) {
           id="ef-grupo"
           value={grupo}
           onChange={(e) => setGrupo(e.target.value)}
-          className="w-full bg-zinc-700 border border-zinc-600 rounded-lg px-3 py-2.5 text-zinc-100 text-sm focus:outline-none focus:border-emerald-500"
+          className="w-full bg-surface-2 border border-line rounded-xl px-3 py-2.5 text-zinc-100 text-sm focus:outline-none focus:border-brand"
         >
           {GRUPOS.map((g) => (
             <option key={g} value={g}>
@@ -73,7 +73,7 @@ export default function ExercicioForm({ exercicio, onSalvo, onCancelar }) {
       </div>
 
       {erro && (
-        <div role="alert" className="bg-red-900/40 border border-red-700 rounded-lg p-2">
+        <div role="alert" className="border border-red-500/30 bg-red-500/10 rounded-xl p-2">
           <p className="text-red-300 text-xs">{erro}</p>
         </div>
       )}
@@ -82,7 +82,7 @@ export default function ExercicioForm({ exercicio, onSalvo, onCancelar }) {
         <button
           type="submit"
           disabled={salvando}
-          className="flex-1 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-2.5 rounded-lg text-sm"
+          className="flex-1 bg-brand hover:bg-brand/90 disabled:opacity-50 disabled:cursor-not-allowed text-ink font-semibold py-2.5 rounded-xl text-sm"
         >
           {salvando ? 'Salvando...' : exercicio ? 'Salvar' : 'Criar'}
         </button>

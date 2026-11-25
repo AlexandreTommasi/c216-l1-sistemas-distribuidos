@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import ExercicioForm, { GRUPOS } from '../components/ExercicioForm.jsx';
+import { Link } from 'react-router-dom';
+import ExercicioForm, { GRUPOS as CHAVES_GRUPO } from '../components/ExercicioForm.jsx';
+import MuscleIcon from '../components/MuscleIcon.jsx';
+import { titulo } from '../lib/formatters.js';
+import { grupo } from '../lib/grupos.js';
 import { listarExercicios, removerExercicio } from '../services/exercicios.js';
 
 export default function ExerciciosPage() {
@@ -10,11 +14,11 @@ export default function ExerciciosPage() {
   const [editando, setEditando] = useState(null);
   const [criando, setCriando] = useState(false);
 
-  const carregar = useCallback(async (grupo) => {
+  const carregar = useCallback(async (chave) => {
     setCarregando(true);
     setErro(null);
     try {
-      const ex = await listarExercicios(grupo || null);
+      const ex = await listarExercicios(chave || null);
       setExercicios(ex);
     } catch (err) {
       setErro(err.message);
@@ -45,55 +49,72 @@ export default function ExerciciosPage() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-xl font-bold">Exercícios</h1>
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="title-display text-3xl">Exercícios</h1>
         <button
           type="button"
           onClick={() => {
             setCriando(true);
             setEditando(null);
           }}
-          className="bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-medium px-4 py-2 rounded-lg"
+          className="glow-brand rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-ink"
         >
           + Novo
         </button>
       </div>
 
       {criando && (
-        <div className="bg-zinc-800 rounded-xl p-4 mb-6">
-          <h2 className="text-sm font-semibold text-zinc-300 mb-3">Novo exercício</h2>
+        <div className="mb-6 rounded-2xl border border-line bg-surface p-4">
+          <h2 className="mb-3 text-sm font-semibold text-zinc-300">Novo exercício</h2>
           <ExercicioForm onSalvo={handleSalvo} onCancelar={() => setCriando(false)} />
         </div>
       )}
 
-      <div className="mb-4">
-        <label className="block text-xs text-zinc-400 mb-1" htmlFor="filtro-grupo">
-          Filtrar por grupo
-        </label>
-        <select
-          id="filtro-grupo"
-          value={filtroGrupo}
-          onChange={(e) => setFiltroGrupo(e.target.value)}
-          className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-zinc-100 text-sm focus:outline-none focus:border-emerald-500"
+      <div className="mb-5 flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={() => setFiltroGrupo('')}
+          aria-pressed={filtroGrupo === ''}
+          className={`rounded-full border px-3 py-1.5 text-xs transition-colors ${
+            filtroGrupo === ''
+              ? 'border-brand bg-brand/15 text-brand'
+              : 'border-line text-zinc-400 hover:text-zinc-100'
+          }`}
         >
-          <option value="">Todos</option>
-          {GRUPOS.map((g) => (
-            <option key={g} value={g}>
-              {g}
-            </option>
-          ))}
-        </select>
+          Todos
+        </button>
+        {CHAVES_GRUPO.map((chave) => {
+          const g = grupo(chave);
+          const ativo = filtroGrupo === chave;
+          return (
+            <button
+              key={chave}
+              type="button"
+              onClick={() => setFiltroGrupo(chave)}
+              aria-pressed={ativo}
+              className="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition-colors"
+              style={{
+                borderColor: ativo ? g.cor : 'var(--color-line)',
+                backgroundColor: ativo ? `${g.cor}1f` : 'transparent',
+                color: ativo ? g.cor : '#a1a1aa',
+              }}
+            >
+              <MuscleIcon chave={chave} className="h-3.5 w-3.5" />
+              {g.rotulo}
+            </button>
+          );
+        })}
       </div>
 
       {carregando && <p className="text-zinc-400">Carregando...</p>}
 
       {erro && (
-        <div role="alert" className="bg-red-900/40 border border-red-700 rounded-lg p-4 mb-4">
-          <p className="text-red-300 mb-2">{erro}</p>
+        <div role="alert" className="mb-4 rounded-2xl border border-red-500/30 bg-red-500/10 p-4">
+          <p className="mb-2 text-red-300">{erro}</p>
           <button
             type="button"
             onClick={() => carregar(filtroGrupo)}
-            className="text-sm text-red-300 underline"
+            className="text-sm text-red-200 underline"
           >
             Tentar de novo
           </button>
@@ -103,50 +124,62 @@ export default function ExerciciosPage() {
       {!carregando && !erro && exercicios !== null && (
         <>
           {exercicios.length === 0 && (
-            <p className="text-zinc-500 text-sm py-8 text-center">
+            <p className="rounded-2xl border border-dashed border-line py-12 text-center text-sm text-zinc-500">
               {filtroGrupo
-                ? `Nenhum exercício em "${filtroGrupo}".`
+                ? `Nenhum exercício em "${grupo(filtroGrupo).rotulo}".`
                 : 'Nenhum exercício cadastrado. Clique em "+ Novo" para adicionar.'}
             </p>
           )}
-          <ul className="space-y-2">
-            {exercicios.map((ex) => (
-              <li key={ex.id}>
-                {editando?.id === ex.id ? (
-                  <div className="bg-zinc-800 rounded-xl p-4">
-                    <ExercicioForm
-                      exercicio={ex}
-                      onSalvo={handleSalvo}
-                      onCancelar={() => setEditando(null)}
-                    />
-                  </div>
-                ) : (
-                  <div className="bg-zinc-800 rounded-xl px-4 py-3 flex items-center gap-3">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-zinc-100 truncate">{ex.nome}</p>
-                      <p className="text-xs text-zinc-500">{ex.grupo_muscular}</p>
+          <ul className="grid gap-2 sm:grid-cols-2">
+            {exercicios.map((ex) => {
+              const g = grupo(ex.grupo_muscular);
+              return (
+                <li key={ex.id}>
+                  {editando?.id === ex.id ? (
+                    <div className="rounded-2xl border border-line bg-surface p-4">
+                      <ExercicioForm
+                        exercicio={ex}
+                        onSalvo={handleSalvo}
+                        onCancelar={() => setEditando(null)}
+                      />
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setEditando(ex);
-                        setCriando(false);
-                      }}
-                      className="text-xs text-zinc-400 hover:text-zinc-100 transition-colors px-2 py-1 min-h-[44px]"
-                    >
-                      Editar
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleRemover(ex.id)}
-                      className="text-xs text-zinc-600 hover:text-red-400 transition-colors px-2 py-1 min-h-[44px]"
-                    >
-                      Excluir
-                    </button>
-                  </div>
-                )}
-              </li>
-            ))}
+                  ) : (
+                    <div className="flex items-center gap-3 rounded-2xl border border-line bg-surface px-4 py-3 transition-colors hover:border-zinc-700">
+                      <span
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
+                        style={{ color: g.cor, backgroundColor: `${g.cor}1a` }}
+                      >
+                        <MuscleIcon chave={ex.grupo_muscular} className="h-5 w-5" />
+                      </span>
+                      <Link to={`/exercicios/${ex.id}`} className="min-w-0 flex-1">
+                        <p className="truncate font-medium text-zinc-100">{titulo(ex.nome)}</p>
+                        <p className="text-xs" style={{ color: g.cor }}>
+                          {g.rotulo}
+                        </p>
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditando(ex);
+                          setCriando(false);
+                        }}
+                        className="rounded-lg px-2.5 py-2 text-xs text-zinc-400 transition-colors hover:bg-surface-2 hover:text-zinc-100"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleRemover(ex.id)}
+                        aria-label={`Excluir ${ex.nome}`}
+                        className="rounded-lg px-2.5 py-2 text-xs text-zinc-600 transition-colors hover:bg-red-500/10 hover:text-red-400"
+                      >
+                        Excluir
+                      </button>
+                    </div>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         </>
       )}
