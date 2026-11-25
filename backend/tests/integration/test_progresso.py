@@ -119,9 +119,9 @@ def test_comparacao_isola_cada_exercicio_da_sessao(client):
     t_id = client.post("/treinos", json={"nome": "Legs regressao"}).json()["id"]
 
     def cria(data, carga_pesado, carga_leve):
-        s_id = client.post(
-            "/sessoes", json={"treino_id": t_id, "data": data}
-        ).json()["id"]
+        s_id = client.post("/sessoes", json={"treino_id": t_id, "data": data}).json()[
+            "id"
+        ]
         for exercicio_id, carga in ((pesado, carga_pesado), (leve, carga_leve)):
             client.post(
                 f"/sessoes/{s_id}/series",
