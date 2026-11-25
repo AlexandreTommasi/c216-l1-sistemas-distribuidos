@@ -1,7 +1,7 @@
 import datetime
 
-from sqlalchemy import func, select
-from sqlalchemy.orm import Session, joinedload, selectinload
+from sqlalchemy import Row, func, select
+from sqlalchemy.orm import Session, joinedload
 
 from overload.models.serie import Serie, TipoSerie
 from overload.models.sessao import Sessao
@@ -38,31 +38,43 @@ class SerieRepository:
         self.db.delete(serie)
         self.db.commit()
 
-    def buscar_sessao_anterior(
+    def buscar_execucao_anterior(
         self, exercicio_id: int, data_atual: datetime.date
-    ) -> Sessao | None:
-        subq = (
+    ) -> Row | None:
+        # Agrega em SQL a ultima execucao DESTE exercicio antes da data dada.
+        # Carregar a sessao anterior inteira e somar em Python ja causou bug:
+        # a colecao vinha com as series de todos os exercicios daquela sessao,
+        # entao a comparacao usava o maximo e o total da sessao, nao do exercicio.
+        sessao_anterior = (
             select(Serie.sessao_id)
             .join(Sessao, Sessao.id == Serie.sessao_id)
             .where(Serie.exercicio_id == exercicio_id)
+            .where(Serie.tipo == TipoSerie.valida)
             .where(Sessao.data < data_atual)
             .order_by(Sessao.data.desc())
             .limit(1)
             .scalar_subquery()
         )
         stmt = (
-            select(Sessao)
-            .where(Sessao.id == subq)
-            .options(selectinload(Sessao.series.and_(Serie.tipo == TipoSerie.valida)))
+            select(
+                Sessao.data,
+                func.max(Serie.carga_kg).label("carga_maxima_kg"),
+                func.sum(Serie.repeticoes).label("repeticoes_totais"),
+            )
+            .join(Sessao, Sessao.id == Serie.sessao_id)
+            .where(Serie.exercicio_id == exercicio_id)
+            .where(Serie.tipo == TipoSerie.valida)
+            .where(Serie.sessao_id == sessao_anterior)
+            .group_by(Sessao.data)
         )
-        return self.db.scalars(stmt).first()
+        return self.db.execute(stmt).first()
 
     def historico_por_exercicio(self, exercicio_id: int) -> list:
         stmt = (
             select(
                 Sessao.data,
                 func.max(Serie.carga_kg).label("carga_maxima_kg"),
-                func.sum(Serie.carga_kg * Serie.repeticoes).label("volume_kg"),
+                func.sum(Serie.repeticoes).label("repeticoes_totais"),
             )
             .join(Sessao, Sessao.id == Serie.sessao_id)
             .where(Serie.exercicio_id == exercicio_id)
@@ -72,14 +84,20 @@ class SerieRepository:
         )
         return list(self.db.execute(stmt).all())
 
-    def buscar_recorde(self, exercicio_id: int) -> Serie | None:
-        # exclui preparatorias tambem: recorde pessoal conta apenas sets validos
+    def buscar_recorde(
+        self, exercicio_id: int, antes_de: datetime.date | None = None
+    ) -> Serie | None:
+        # recorde pessoal conta apenas series validas
         stmt = (
             select(Serie)
             .join(Sessao, Sessao.id == Serie.sessao_id)
             .where(Serie.exercicio_id == exercicio_id)
             .where(Serie.tipo == TipoSerie.valida)
-            .options(joinedload(Serie.sessao))
+        )
+        if antes_de is not None:
+            stmt = stmt.where(Sessao.data < antes_de)
+        stmt = (
+            stmt.options(joinedload(Serie.sessao))
             .order_by(Serie.carga_kg.desc())
             .limit(1)
         )

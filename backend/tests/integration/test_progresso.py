@@ -102,3 +102,49 @@ def test_comparacao_404_sessao_inexistente(client):
 def test_historico_404_exercicio_inexistente(client):
     r = client.get("/exercicios/9999/historico")
     assert r.status_code == 404
+
+
+def test_comparacao_isola_cada_exercicio_da_sessao(client):
+    # Regressao: a execucao anterior vinha agregada da sessao anterior INTEIRA,
+    # entao um exercicio leve era comparado contra a carga do exercicio pesado
+    # feito no mesmo dia, e todo mundo aparecia regredindo.
+    pesado = client.post(
+        "/exercicios",
+        json={"nome": "Agachamento regressao", "grupo_muscular": "pernas"},
+    ).json()["id"]
+    leve = client.post(
+        "/exercicios",
+        json={"nome": "Bulgaro regressao", "grupo_muscular": "pernas"},
+    ).json()["id"]
+    t_id = client.post("/treinos", json={"nome": "Legs regressao"}).json()["id"]
+
+    def cria(data, carga_pesado, carga_leve):
+        s_id = client.post(
+            "/sessoes", json={"treino_id": t_id, "data": data}
+        ).json()["id"]
+        for exercicio_id, carga in ((pesado, carga_pesado), (leve, carga_leve)):
+            client.post(
+                f"/sessoes/{s_id}/series",
+                json={
+                    "exercicio_id": exercicio_id,
+                    "carga_kg": carga,
+                    "repeticoes": 8,
+                    "tipo": "valida",
+                },
+            )
+        return s_id
+
+    cria("2024-05-01", 150, 20)
+    s2_id = cria("2024-05-08", 160, 22.5)
+
+    body = client.get(f"/sessoes/{s2_id}/comparacao").json()
+    por_id = {e["exercicio_id"]: e for e in body["exercicios"]}
+
+    assert float(por_id[pesado]["sessao_anterior"]["carga_maxima_kg"]) == 150.0
+    assert float(por_id[pesado]["delta"]["carga_kg"]) == 10.0
+    assert por_id[pesado]["status"] == "evoluiu"
+
+    assert float(por_id[leve]["sessao_anterior"]["carga_maxima_kg"]) == 20.0
+    assert float(por_id[leve]["delta"]["carga_kg"]) == 2.5
+    assert por_id[leve]["sessao_anterior"]["repeticoes_totais"] == 8
+    assert por_id[leve]["status"] == "evoluiu"

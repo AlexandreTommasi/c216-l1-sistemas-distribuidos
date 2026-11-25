@@ -137,11 +137,11 @@ class FakeSerieRepository:
     def __init__(self):
         self._store: dict = {}
         self._next_id = 1
-        self._sessoes_anteriores: dict = {}
+        self._execucoes_anteriores: dict = {}
         self._recordes: dict = {}
 
-    def configurar_sessao_anterior(self, exercicio_id, sessao):
-        self._sessoes_anteriores[exercicio_id] = sessao
+    def configurar_execucao_anterior(self, exercicio_id, execucao):
+        self._execucoes_anteriores[exercicio_id] = execucao
 
     def configurar_recorde(self, exercicio_id, serie):
         self._recordes[exercicio_id] = serie
@@ -174,10 +174,10 @@ class FakeSerieRepository:
     def remover(self, serie):
         del self._store[serie.id]
 
-    def buscar_sessao_anterior(self, exercicio_id, data_atual):
-        return self._sessoes_anteriores.get(exercicio_id)
+    def buscar_execucao_anterior(self, exercicio_id, data_atual):
+        return self._execucoes_anteriores.get(exercicio_id)
 
-    def buscar_recorde(self, exercicio_id):
+    def buscar_recorde(self, exercicio_id, antes_de=None):
         return self._recordes.get(exercicio_id)
 
     def historico_por_exercicio(self, exercicio_id):

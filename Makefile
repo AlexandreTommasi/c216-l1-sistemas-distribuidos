@@ -117,9 +117,9 @@ migrate:
 	docker compose run --rm migrate
 
 test-int:
-	@echo "→ Recriando banco de testes (overload_test)..."
+	@echo Recriando o banco de testes overload_test
 	@$(RUN) python -c "import sqlalchemy as sa; u='postgresql+psycopg://$(_PG_USER):$(_PG_PASS)@127.0.0.1:$(DB_PORT)/postgres'; e=sa.create_engine(u,isolation_level='AUTOCOMMIT'); c=e.connect(); c.execute(sa.text('DROP DATABASE IF EXISTS overload_test')); c.execute(sa.text('CREATE DATABASE overload_test')); c.close(); print('overload_test: pronto')"
-	@echo "→ Aplicando migrations (alembic upgrade head)..."
-	@cd backend && DATABASE_URL=$(_TEST_URL) poetry run alembic upgrade head
-	DATABASE_URL=$(_TEST_URL) TEST_DATABASE_URL=$(_TEST_URL) \
-		$(RUN) pytest -m integration -v
+	@echo Aplicando as migrations com alembic upgrade head
+	@$(RUN) python -c "import os, subprocess, sys; os.environ['DATABASE_URL'] = '$(_TEST_URL)'; sys.exit(subprocess.call([sys.executable, '-m', 'alembic', 'upgrade', 'head']))"
+	@echo Rodando os testes de integracao
+	@$(RUN) python -c "import os, subprocess, sys; os.environ['DATABASE_URL'] = '$(_TEST_URL)'; os.environ['TEST_DATABASE_URL'] = '$(_TEST_URL)'; sys.exit(subprocess.call([sys.executable, '-m', 'pytest', '-m', 'integration', '-v']))"
