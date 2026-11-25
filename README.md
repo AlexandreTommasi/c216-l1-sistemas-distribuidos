@@ -6,11 +6,39 @@ O problema que a ferramenta resolve é objetivo: quem treina com sobrecarga prog
 
 ---
 
+## Funcionalidades
+
+- Registro de sessões de treino, com treino e data
+- Registro de séries na própria tela da sessão: carga, repetições e tipo (válida, aquecimento, preparatória). O formulário continua aberto e preenchido entre uma série e outra, e cada exercício tem um atalho "+ Série"
+- Sugestão dos exercícios da última sessão do mesmo treino, com a carga usada
+- Comparação de cada exercício com a última vez em que foi feito: variação de carga e status (evoluiu, manteve, regrediu, primeira vez)
+- Recorde pessoal por exercício
+- Histórico paginado e painel com último treino, treinos na semana, sequência de semanas, média semanal e mapa de consistência
+- Tela de evolução por exercício, com gráfico da carga máxima por sessão
+- CRUD de exercícios, com filtro por grupo muscular, e CRUD de treinos
+- Criação de exercício sem sair da sessão
+
+## Tecnologias
+
+| Parte | Tecnologias |
+|-------|-------------|
+| Backend | Python 3.14, FastAPI, Pydantic, SQLAlchemy 2, Alembic, Poetry, Ruff, Pytest |
+| Banco | PostgreSQL 16 |
+| Frontend | React, Vite, Tailwind CSS v4, React Router, Biome, Vitest, Testing Library, Playwright |
+| Infraestrutura | Docker, Docker Compose, nginx, GitHub Actions, Make |
+
+---
+
 ## Como rodar
 
 ### Com Docker (caminho principal)
 
-Pré-requisito: Docker com Compose v2.
+### Pré-requisitos
+
+- Docker com Compose v2
+- Make
+- Para rodar sem Docker: Python 3.14 com Poetry, e Node 22
+
 
 ```bash
 cp .env.example .env
@@ -26,7 +54,7 @@ O Compose sobe quatro serviços em ordem:
 | `backend`  | API FastAPI servida pelo Uvicorn                                 | `http://localhost:8000`  |
 | `frontend` | Bundle React servido pelo nginx                                  | `http://localhost:5173`  |
 
-O banco já vem populado com histórico de dez semanas de treino, aplicado por uma migration de seed (`f1e2d3c4b5a6`). A tela não fica vazia na primeira execução — isso é intencional para facilitar a avaliação.
+O banco já vem populado com histórico de dez semanas de treino, aplicado por uma migration de seed (`f1e2d3c4b5a6`); uma terceira (`b3d5f7a9c1e2`) corrige a acentuação dos nomes desses exercícios. A tela não fica vazia na primeira execução — isso é intencional para facilitar a avaliação.
 
 Outros comandos úteis:
 
@@ -159,8 +187,7 @@ A documentação interativa está disponível em `http://localhost:8000/docs` qu
 ### Backend — unitários (41 testes)
 
 ```bash
-cd backend
-poetry run pytest -m unit
+make test-unit
 ```
 
 Testam a lógica dos serviços de forma isolada, usando repositórios falsos (`tests/unit/fakes.py`). Não tocam o banco. Cobrem: criação e validação de entidades, cálculo de progresso, casos de erro (`NaoEncontrado`, `Conflito`, nomes duplicados). Alguns casos de teste usam `@pytest.mark.parametrize`, por isso o número de testes executados (40) é maior que o número de funções de teste.
