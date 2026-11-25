@@ -11,7 +11,7 @@ _TEST_URL  = postgresql+psycopg://$(_PG_USER):$(_PG_PASS)@127.0.0.1:$(DB_PORT)/o
 
 .PHONY: help install update run lint format check clean \
         front-install front-dev front-build front-lint front-format front-test e2e \
-        build up down down-volumes logs ps migrate test-int
+        build up down down-volumes logs ps migrate test-int test-unit
 
 help:
 	@echo ------------------------------------------
@@ -36,7 +36,7 @@ help:
 	@echo   front-lint      Verifica o frontend com biome lint
 	@echo   front-format    Formata o frontend com biome format
 	@echo   front-test      Executa os testes do frontend uma vez
-	@echo   e2e             Executa os testes E2E via Playwright (stack Compose deve estar no ar)
+	@echo   e2e             Executa os testes E2E via Playwright, com a stack do Compose no ar
 	@echo ------------------------------------------
 	@echo [Docker]
 	@echo   build        Constroi as imagens Docker
@@ -47,7 +47,8 @@ help:
 	@echo   ps           Lista os conteineres e seus estados
 	@echo   migrate      Executa as migrations manualmente
 	@echo ------------------------------------------
-	@echo [Testes de Integracao]
+	@echo [Testes do backend]
+	@echo   test-unit Roda os testes unitarios do backend
 	@echo   test-int  Sobe overload_test e roda os testes de integracao
 	@echo ------------------------------------------
 	@echo [Limpeza]
@@ -115,6 +116,9 @@ ps:
 
 migrate:
 	docker compose run --rm migrate
+
+test-unit:
+	$(RUN) pytest -m unit
 
 test-int:
 	@echo Recriando o banco de testes overload_test
