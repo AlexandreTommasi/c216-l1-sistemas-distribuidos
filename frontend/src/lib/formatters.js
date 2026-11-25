@@ -46,11 +46,11 @@ export function kgComSinal(valor) {
   return `${n > 0 ? '+' : ''}${kg(n)}`;
 }
 
+// So a primeira letra: e o padrao em portugues ("Leg press") e preserva o que
+// o usuario digitou no resto do nome.
 export function titulo(texto) {
-  return String(texto ?? '')
-    .split(' ')
-    .map((p) => (p.length > 2 ? p[0].toUpperCase() + p.slice(1) : p))
-    .join(' ');
+  const s = String(texto ?? '');
+  return s ? s[0].toUpperCase() + s.slice(1) : s;
 }
 
 // Data local em "YYYY-MM-DD". toISOString() usaria UTC: depois das 21h no

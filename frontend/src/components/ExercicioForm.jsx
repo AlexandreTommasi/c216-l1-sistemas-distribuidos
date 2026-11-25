@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { grupo as infoGrupo } from '../lib/grupos.js';
 import { atualizarExercicio, criarExercicio } from '../services/exercicios.js';
 
 export const GRUPOS = [
@@ -66,7 +67,7 @@ export default function ExercicioForm({ exercicio, onSalvo, onCancelar }) {
         >
           {GRUPOS.map((g) => (
             <option key={g} value={g}>
-              {g}
+              {infoGrupo(g).rotulo}
             </option>
           ))}
         </select>
