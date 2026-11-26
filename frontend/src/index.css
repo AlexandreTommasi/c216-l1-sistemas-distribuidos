@@ -1,0 +1,50 @@
+@import url("https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap");
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #09090a;
+  --color-surface: #131316;
+  --color-surface-2: #1a1a1e;
+  --color-line: #27272c;
+  --color-brand: #c7f04a;
+  --color-brand-dim: #8ba832;
+  --font-display: "Oswald", system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-ink);
+    color: #e7e7ea;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer utilities {
+  .title-display {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    line-height: 1.05;
+  }
+  .glow-brand {
+    box-shadow: 0 0 0 1px rgb(199 240 74 / 0.25), 0 0 28px -8px rgb(199 240 74 / 0.45);
+  }
+  .grain {
+    background-image: radial-gradient(rgb(255 255 255 / 0.035) 1px, transparent 1px);
+    background-size: 3px 3px;
+  }
+  .enter-up {
+    animation: enter-up 0.28s ease-out both;
+  }
+}
+
+@keyframes enter-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
