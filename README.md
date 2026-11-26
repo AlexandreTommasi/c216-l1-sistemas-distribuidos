@@ -4,6 +4,8 @@ Overload é uma aplicação para registro de séries de treino de musculação. 
 
 O problema que a ferramenta resolve é objetivo: quem treina com sobrecarga progressiva precisa saber o que fez na sessão anterior para decidir se aumenta a carga. Caderninho se perde, planilha não está disponível na academia e aplicativos genéricos de diário não mostram a comparação de forma imediata. O Overload registra a série e responde na hora se foi acima ou abaixo da última vez.
 
+**Vídeo de apresentação:** https://www.youtube.com/watch?v=sZ7XTjB6Uu8
+
 ---
 
 ## Funcionalidades
@@ -285,7 +287,7 @@ make up
 
 ## Vídeo
 
-(link a ser adicionado)
+Apresentação do projeto (5 min): https://www.youtube.com/watch?v=sZ7XTjB6Uu8
 
 ---
 
